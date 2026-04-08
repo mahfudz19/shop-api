@@ -2,66 +2,132 @@ package repository
 
 import (
 	"context"
-	// PENTING: Ganti "github.com/username/shop-api" dengan nama module yang ada di file go.mod kamu
-	"github.com/username/shop-api/internal/domain"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/username/shop-api/internal/domain"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-// mongoProductRepository adalah implementasi konkrit dari antarmuka domain.ProductRepository
 type mongoProductRepository struct {
 	db         *mongo.Database
 	collection string
 }
 
-// NewMongoProductRepository adalah constructor (pembuat) instance repository
 func NewMongoProductRepository(db *mongo.Database) domain.ProductRepository {
 	return &mongoProductRepository{
 		db:         db,
-		collection: "products", // Sesuaikan dengan nama collection di MongoDB Atlas kamu
+		collection: "products",
 	}
 }
 
-// FetchAll mengambil semua data produk dari MongoDB
-func (m *mongoProductRepository) FetchAll(ctx context.Context) ([]domain.Product, error) {
-	var products []domain.Product
+// BARU: FetchWithFilter dengan pagination, search, sort
+func (m *mongoProductRepository) FetchWithFilter(
+	ctx context.Context,
+	filter domain.ProductFilter,
+) ([]domain.Product, int64, error) {
 
-	// Query tanpa filter (bson.M{}) artinya ambil semua data
-	cursor, err := m.db.Collection(m.collection).Find(ctx, bson.M{})
-	if err != nil {
-		return nil, err
+	var products []domain.Product
+	collection := m.db.Collection(m.collection)
+
+	// 1. BUILD FILTER (Search + Filter)
+	bsonFilter := bson.M{}
+
+	// Search by name (case-insensitive)
+	if filter.Search != "" {
+		bsonFilter["name"] = bson.M{
+			"$regex":   filter.Search,
+			"$options": "i", // i = case insensitive
+		}
 	}
-	// Pastikan cursor ditutup setelah selesai
+
+	// Filter by location
+	if filter.Location != "" {
+		bsonFilter["location"] = filter.Location
+	}
+
+	// Filter by marketplace
+	if filter.Marketplace != "" {
+		bsonFilter["marketplace"] = filter.Marketplace
+	}
+
+	// Filter by price range
+	if filter.MinPrice > 0 || filter.MaxPrice > 0 {
+		priceFilter := bson.M{}
+		if filter.MinPrice > 0 {
+			priceFilter["$gte"] = filter.MinPrice
+		}
+		if filter.MaxPrice > 0 {
+			priceFilter["$lte"] = filter.MaxPrice
+		}
+		bsonFilter["price_rp"] = priceFilter
+	}
+
+	// 2. HITUNG TOTAL (untuk metadata pagination)
+	total, err := collection.CountDocuments(ctx, bsonFilter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 3. SETUP OPTIONS (Sort + Pagination)
+	opts := options.Find()
+
+	// Sorting
+	sortField := filter.SortBy
+	if sortField == "" {
+		sortField = "createdAt" // default sort
+	}
+
+	sortOrder := 1 // 1 = ascending, -1 = descending
+	if filter.SortOrder == "desc" {
+		sortOrder = -1
+	}
+	opts.SetSort(bson.D{{Key: sortField, Value: sortOrder}})
+
+	// Pagination
+	if filter.Limit <= 0 {
+		filter.Limit = 10 // default 10 item per halaman
+	}
+	if filter.Page <= 0 {
+		filter.Page = 1 // default halaman 1
+	}
+
+	skip := (filter.Page - 1) * filter.Limit
+	opts.SetLimit(filter.Limit)
+	opts.SetSkip(skip)
+
+	// 4. EXECUTE QUERY
+	cursor, err := collection.Find(ctx, bsonFilter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
 	defer cursor.Close(ctx)
 
-	// Looping untuk memasukkan data dari MongoDB ke dalam slice struct Product
+	// Decode hasil
 	for cursor.Next(ctx) {
 		var p domain.Product
 		if err := cursor.Decode(&p); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		products = append(products, p)
 	}
 
-	return products, nil
+	return products, total, nil
 }
 
-// GetByID mengambil satu data produk berdasarkan ID
 func (m *mongoProductRepository) GetByID(ctx context.Context, id string) (domain.Product, error) {
 	var product domain.Product
 
-	// Convert string ID dari URL parameter menjadi format ObjectID MongoDB
-	objID, err := primitive.ObjectIDFromHex(id)
+	// Convert string ID ke ObjectID
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return product, err // Gagal karena format ID tidak valid
+		return product, err // Invalid ID format
 	}
 
-	// Query FindOne berdasarkan _id
+	// Query
 	err = m.db.Collection(m.collection).FindOne(ctx, bson.M{"_id": objID}).Decode(&product)
 	if err != nil {
-		return product, err // Gagal karena data tidak ditemukan atau error DB
+		return product, err // Not found atau error DB
 	}
 
 	return product, nil
