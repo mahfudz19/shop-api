@@ -1,3 +1,4 @@
+// Package response = Helper untuk format response API yang konsisten
 package response
 
 import (

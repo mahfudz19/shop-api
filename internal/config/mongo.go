@@ -1,3 +1,4 @@
+// Package config menyediakan fungsi untuk mengelola koneksi ke MongoDB
 package config
 
 import (

@@ -1,7 +1,9 @@
+// Package repository = Implementasi Repository untuk Product menggunakan MongoDB
 package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/username/shop-api/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -14,6 +16,7 @@ type mongoProductRepository struct {
 	collection string
 }
 
+// NewMongoProductRepository = Inisialisasi MongoDB Repository untuk Product
 func NewMongoProductRepository(db *mongo.Database) domain.ProductRepository {
 	return &mongoProductRepository{
 		db:         db,
@@ -101,7 +104,11 @@ func (m *mongoProductRepository) FetchWithFilter(
 	if err != nil {
 		return nil, 0, err
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Printf("⚠️ Warning: Gagal menutup cursor: %v", err)
+		}
+	}()
 
 	// Decode hasil
 	for cursor.Next(ctx) {

@@ -1,3 +1,4 @@
+// Package repository = Implementasi Repository untuk User dengan MongoDB
 package repository
 
 import (

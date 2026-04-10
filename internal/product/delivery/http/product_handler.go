@@ -1,3 +1,4 @@
+// Package http = Delivery layer untuk Product
 package http
 
 import (
@@ -8,10 +9,12 @@ import (
 	"github.com/username/shop-api/internal/response"
 )
 
+// ProductHandler struct untuk handle HTTP request terkait Product
 type ProductHandler struct {
 	usecase domain.ProductUseCase
 }
 
+// NewProductHandler = Inisialisasi routes untuk Product
 func NewProductHandler(r *gin.Engine, us domain.ProductUseCase) {
 	handler := &ProductHandler{usecase: us}
 

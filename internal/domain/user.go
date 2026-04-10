@@ -11,9 +11,9 @@ import (
 type User struct {
 	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Email     string        `bson:"email" json:"email"`
-	Password  string        `bson:"password" json:"-"` // json:"-" = tidak dimasukkan ke JSON response
+	Password  string        `bson:"password" json:"-"`
 	Name      string        `bson:"name" json:"name"`
-	Role      string        `bson:"role" json:"role"` // admin, user
+	Role      string        `bson:"role" json:"role"`
 	CreatedAt time.Time     `bson:"createdAt" json:"created_at"`
 	UpdatedAt time.Time     `bson:"updatedAt" json:"updated_at"`
 }

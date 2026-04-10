@@ -1,3 +1,4 @@
+// Package main adalah titik masuk utama (entry point) untuk aplikasi.
 package main
 
 import (
@@ -50,6 +51,9 @@ func main() {
 
 	// 3. Init Gin
 	r := gin.Default()
+	if err := r.SetTrustedProxies(nil); err != nil {
+		log.Printf("Warning: Gagal set trusted proxies: %v", err)
+	}
 
 	// 4. WIRING CLEAN ARCHITECTURE
 

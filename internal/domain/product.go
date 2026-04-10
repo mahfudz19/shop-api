@@ -1,3 +1,4 @@
+// Package domain mendefinisikan struktur data dan interface untuk produk.
 package domain
 
 import (
@@ -20,7 +21,7 @@ type Product struct {
 	UpdatedAt   time.Time     `bson:"updatedAt" json:"updated_at"`
 }
 
-// BARU: Struct untuk parameter query
+// ProductFilter Struct untuk filter dan pagination
 type ProductFilter struct {
 	Search      string // Search by name
 	Location    string // Filter by location
@@ -33,7 +34,7 @@ type ProductFilter struct {
 	Limit       int64  // Jumlah item per halaman
 }
 
-// BARU: Struct untuk response dengan metadata pagination
+// ProductResponse Struct untuk response dengan metadata pagination
 type ProductResponse struct {
 	Data       []Product `json:"data"`
 	Total      int64     `json:"total"`
@@ -42,12 +43,13 @@ type ProductResponse struct {
 	TotalPages int64     `json:"total_pages"`
 }
 
-// Update Interface
+// ProductUseCase dan ProductRepository tetap sama, hanya ditambahkan method baru untuk GetByID
 type ProductUseCase interface {
 	GetProductsWithFilter(ctx context.Context, filter ProductFilter) (ProductResponse, error)
 	GetProductByID(ctx context.Context, id string) (Product, error) // BARU
 }
 
+// ProductRepository interface untuk database operations
 type ProductRepository interface {
 	FetchWithFilter(ctx context.Context, filter ProductFilter) ([]Product, int64, error)
 	GetByID(ctx context.Context, id string) (Product, error) // BARU

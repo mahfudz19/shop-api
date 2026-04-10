@@ -1,3 +1,4 @@
+// Package usecase = Business logic untuk Product
 package usecase
 
 import (
@@ -12,6 +13,7 @@ type productUseCase struct {
 	repo domain.ProductRepository
 }
 
+// NewProductUseCase = Inisialisasi Product UseCase
 func NewProductUseCase(repo domain.ProductRepository) domain.ProductUseCase {
 	return &productUseCase{repo: repo}
 }

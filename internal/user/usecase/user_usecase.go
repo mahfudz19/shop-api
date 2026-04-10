@@ -1,3 +1,4 @@
+// Package usecase = Business logic untuk User
 package usecase
 
 import (
