@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/username/shop-api/internal/domain"
 	"github.com/username/shop-api/internal/response"
+	"github.com/username/shop-api/internal/util"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -20,8 +21,9 @@ func NewUserHandler(r *gin.Engine, us domain.UserUseCase) {
 	// Auth routes
 	r.POST("/auth/register", handler.Register)
 	r.POST("/auth/login", handler.Login)
+	r.POST("/auth/logout", handler.Logout)
 
-	// User routes (protected - nanti bisa tambah middleware)
+	// User routes
 	r.GET("/users/:id", handler.GetByID)
 }
 
@@ -75,11 +77,37 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 	user, err := h.usecase.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		response.ErrorBadRequest(c, "Invalid email or password")
+		// Gunakan ErrorUnauthorized untuk login gagal
+		response.ErrorUnauthorized(c, "Invalid email or password")
 		return
 	}
 
-	response.SuccessSingle(c, "Login successful", user)
+	// 1. Generate JWT Token
+	// Catatan: import "github.com/username/shop-api/internal/util" di atas
+	tokenString, err := util.GenerateToken(user.ID.Hex(), user.Email)
+	if err != nil {
+		response.ErrorInternal(c, err)
+		return
+	}
+
+	// 2. Set HttpOnly Cookie
+	// SetCookie(name, value, maxAge, path, domain, secure, httpOnly)
+	c.SetCookie("auth_token", tokenString, 3600*24, "/", "localhost", false, true)
+
+	// 3. Kembalikan Response Sukses tanpa mengirimkan token di body JSON!
+	response.SuccessSingle(c, "Login successful", gin.H{
+		"id":    user.ID.Hex(),
+		"email": user.Email,
+		"name":  user.Name,
+	})
+}
+
+// Logout handler
+func (h *UserHandler) Logout(c *gin.Context) {
+	// Hapus cookie dengan cara mengatur MaxAge ke -1
+	c.SetCookie("auth_token", "", -1, "/", "localhost", false, true)
+
+	response.SuccessSingle(c, "Logout successful", nil)
 }
 
 // GetByID handler

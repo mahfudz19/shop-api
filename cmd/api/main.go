@@ -4,12 +4,16 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	"github.com/username/shop-api/internal/config"
+
+	"github.com/username/shop-api/internal/middleware"
+
 	productHttp "github.com/username/shop-api/internal/product/delivery/http"
 	"github.com/username/shop-api/internal/product/repository"
 	"github.com/username/shop-api/internal/product/usecase"
@@ -25,7 +29,7 @@ func main() {
 		log.Println("⚠️  Warning: .env file tidak ditemukan")
 	}
 
-	// 2. CONNECT DATABASE (di sini!)
+	// 2. CONNECT DATABASE
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
 		log.Fatal("❌ MONGODB_URI tidak ditemukan di .env")
@@ -57,17 +61,43 @@ func main() {
 
 	// 4. WIRING CLEAN ARCHITECTURE
 
-	// ========== PRODUCT WIRING (sudah ada) ==========
+	// ========== PRODUCT WIRING (Rute Publik) ==========
+	// Endpoint seperti GET /products bisa diakses siapa saja tanpa login
 	productRepo := repository.NewMongoProductRepository(db)
 	productUsecase := usecase.NewProductUseCase(productRepo)
 	productHttp.NewProductHandler(r, productUsecase)
 
-	// ========== USER WIRING (BARU!) ==========
+	// ========== USER WIRING (Rute Publik) ==========
+	// Endpoint /auth/login dan /auth/register harus publik
 	userRepository := userRepo.NewMongoUserRepository(db)
 	userUseCase := userUsecase.NewUserUseCase(userRepository)
 	userHttp.NewUserHandler(r, userUseCase)
 
-	// 5. Run Server
+	// ========== 5. RUTE TERPROTEKSI DENGAN MIDDLEWARE (BARU!) ==========
+	// Buat grup rute baru yang diawali dengan "/admin"
+	adminRoutes := r.Group("/admin")
+
+	// Pasang satpam (middleware) hanya untuk grup rute ini
+	adminRoutes.Use(middleware.AuthMiddleware())
+
+	// Contoh endpoint yang sudah dilindungi satpam
+	// Rute aslinya menjadi: GET /admin/dashboard
+	adminRoutes.GET("/dashboard", func(c *gin.Context) {
+		// Kita bisa mengambil ID pengguna dari context yang sudah disisipkan oleh middleware
+		userID, _ := c.Get("user_id")
+		userEmail, _ := c.Get("user_email")
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Selamat datang di area admin!",
+			"data": gin.H{
+				"id":    userID,
+				"email": userEmail,
+			},
+		})
+	})
+
+	// 6. Run Server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

@@ -170,3 +170,20 @@ func ErrorValidation(c *gin.Context, details string) {
 		},
 	})
 }
+
+// ErrorUnauthorized = 401
+func ErrorUnauthorized(c *gin.Context, details string) {
+	c.JSON(http.StatusUnauthorized, BaseResponse{
+		Success: false,
+		Status:  http.StatusUnauthorized,
+		Message: "Unauthorized",
+		Error: &ErrorData{
+			Code:    "UNAUTHORIZED",
+			Details: details,
+		},
+		Meta: MetaData{
+			Timestamp: nowISO(),
+			RequestID: generateRequestID(),
+		},
+	})
+}
