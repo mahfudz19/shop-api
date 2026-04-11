@@ -14,8 +14,8 @@ type User struct {
 	Password  string        `bson:"password" json:"-"`
 	Name      string        `bson:"name" json:"name"`
 	Role      string        `bson:"role" json:"role"`
-	CreatedAt time.Time     `bson:"createdAt" json:"created_at"`
-	UpdatedAt time.Time     `bson:"updatedAt" json:"updated_at"`
+	CreatedAt time.Time     `bson:"createdAt" json:"createdAt"`
+	UpdatedAt time.Time     `bson:"updatedAt" json:"updatedAt"`
 }
 
 // UserRepository interface untuk database operations

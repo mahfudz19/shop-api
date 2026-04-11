@@ -12,13 +12,13 @@ import (
 type Product struct {
 	ID          bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	URL         string        `bson:"url" json:"url"`
-	CreatedAt   time.Time     `bson:"createdAt" json:"created_at"`
+	CreatedAt   time.Time     `bson:"createdAt" json:"createdAt"`
 	Location    string        `bson:"location" json:"location"`
 	Marketplace string        `bson:"marketplace" json:"marketplace"`
 	Name        string        `bson:"name" json:"name"`
 	PriceRp     int64         `bson:"price_rp" json:"price_rp"`
 	Shop        string        `bson:"shop" json:"shop"`
-	UpdatedAt   time.Time     `bson:"updatedAt" json:"updated_at"`
+	UpdatedAt   time.Time     `bson:"updatedAt" json:"updatedAt"`
 }
 
 // ProductFilter Struct untuk filter dan pagination
