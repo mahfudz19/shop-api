@@ -18,8 +18,7 @@ coverage.html
 build-errors.log
 
 # Environment
-.env.local
-.env.*.local
+.env*
 
 # IDE
 .idea/
