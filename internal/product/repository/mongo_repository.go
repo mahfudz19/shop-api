@@ -139,3 +139,80 @@ func (m *mongoProductRepository) GetByID(ctx context.Context, id string) (domain
 
 	return product, nil
 }
+
+// GetDeals: Mengambil produk dengan diskon tertinggi
+func (m *mongoProductRepository) GetDeals(ctx context.Context, limit int64) ([]domain.Product, error) {
+	var products []domain.Product
+	collection := m.db.Collection(m.collection)
+
+	// Filter: Hanya produk yang punya diskon > 0
+	filter := bson.M{"discount_percent": bson.M{"$gt": 0}}
+
+	// Sort berdasarkan discount_percent dari yang paling besar (descending: -1)
+	opts := options.Find().
+		SetSort(bson.D{{Key: "discount_percent", Value: -1}}).
+		SetLimit(limit)
+
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Printf("⚠️ Warning: Gagal menutup cursor di GetDeals: %v", err)
+		}
+	}()
+
+	for cursor.Next(ctx) {
+		var p domain.Product
+		if err := cursor.Decode(&p); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+
+	return products, nil
+}
+
+// GetStats: Mengambil agregasi statistik total produk & toko unik
+func (m *mongoProductRepository) GetStats(ctx context.Context) (domain.ProductStats, error) {
+	collection := m.db.Collection(m.collection)
+
+	// 1. Hitung total semua dokumen produk
+	totalProducts, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return domain.ProductStats{}, err
+	}
+
+	// 2. Hitung jumlah toko unik menggunakan Aggregation (Lebih aman dari Distinct untuk Data Besar & Kompatibel v2)
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$shop"}}}},
+		bson.D{{Key: "$count", Value: "total_shops"}},
+	}
+
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return domain.ProductStats{}, err
+	}
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Printf("⚠️ Warning: Gagal menutup cursor di GetDeals: %v", err)
+		}
+	}()
+
+	var totalShops int
+	if cursor.Next(ctx) {
+		// Struct sementara untuk menangkap hasil $count
+		var result struct {
+			TotalShops int `bson:"total_shops"`
+		}
+		if err := cursor.Decode(&result); err == nil {
+			totalShops = result.TotalShops
+		}
+	}
+
+	return domain.ProductStats{
+		TotalProducts: totalProducts,
+		TotalShops:    totalShops,
+	}, nil
+}

@@ -61,3 +61,18 @@ func (u *productUseCase) GetProductByID(ctx context.Context, id string) (domain.
 	}
 	return u.repo.GetByID(ctx, id)
 }
+
+func (u *productUseCase) GetDeals(ctx context.Context, limit int64) ([]domain.Product, error) {
+	// Default limit jika tidak dikirim dari request
+	if limit <= 0 {
+		limit = 10
+	} else if limit > 50 {
+		limit = 50 // Maksimal 50 item untuk alasan performa
+	}
+
+	return u.repo.GetDeals(ctx, limit)
+}
+
+func (u *productUseCase) GetStats(ctx context.Context) (domain.ProductStats, error) {
+	return u.repo.GetStats(ctx)
+}

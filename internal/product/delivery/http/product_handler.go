@@ -18,8 +18,10 @@ type ProductHandler struct {
 func NewProductHandler(r *gin.Engine, us domain.ProductUseCase) {
 	handler := &ProductHandler{usecase: us}
 
+	r.GET("/products/deals", handler.GetDeals)
+	r.GET("/products/stats", handler.GetStats)
 	r.GET("/products", handler.FetchAll)
-	r.GET("/products/:id", handler.GetByID) // Tambah endpoint by ID
+	r.GET("/products/:id", handler.GetByID)
 }
 
 // FetchAll = List dengan pagination
@@ -89,4 +91,38 @@ func (h *ProductHandler) GetByID(c *gin.Context) {
 	}
 
 	response.SuccessSingle(c, "Product retrieved successfully", product)
+}
+
+// GetDeals = Handler untuk Featured Deals
+func (h *ProductHandler) GetDeals(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	// Parse query params untuk limit (opsional, default diatur di usecase)
+	var limit int64 = 10
+	if limitQuery := c.Query("limit"); limitQuery != "" {
+		if val, err := strconv.ParseInt(limitQuery, 10, 64); err == nil {
+			limit = val
+		}
+	}
+
+	products, err := h.usecase.GetDeals(ctx, limit)
+	if err != nil {
+		response.ErrorInternal(c, err)
+		return
+	}
+
+	response.SuccessSingle(c, "Success fetch featured deals", products)
+}
+
+// GetStats = Handler untuk Trust Section
+func (h *ProductHandler) GetStats(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	stats, err := h.usecase.GetStats(ctx)
+	if err != nil {
+		response.ErrorInternal(c, err)
+		return
+	}
+
+	response.SuccessSingle(c, "Success fetch product statistics", stats)
 }

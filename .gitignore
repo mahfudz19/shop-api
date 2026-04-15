@@ -22,7 +22,6 @@ build-errors.log
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
