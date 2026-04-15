@@ -25,6 +25,10 @@ import (
 	categoryHttp "github.com/username/shop-api/internal/category/delivery/http"
 	categoryRepo "github.com/username/shop-api/internal/category/repository"
 	categoryUseCase "github.com/username/shop-api/internal/category/usecase"
+
+	promotionHttp "github.com/username/shop-api/internal/promotion/delivery/http"
+	promotionRepo "github.com/username/shop-api/internal/promotion/repository"
+	promotionUseCase "github.com/username/shop-api/internal/promotion/usecase"
 )
 
 func main() {
@@ -82,6 +86,12 @@ func main() {
 	catRepo := categoryRepo.NewMongoCategoryRepository(db)
 	catUC := categoryUseCase.NewCategoryUseCase(catRepo)
 	categoryHttp.NewCategoryHandler(r, catUC)
+
+	// ========== PROMOTION WIRING (Rute Publik) ==========
+	// Endpoint seperti GET /promotions bisa diakses siapa saja tanpa login
+	promoRepo := promotionRepo.NewMongoPromotionRepository(db)
+	promoUC := promotionUseCase.NewPromotionUseCase(promoRepo)
+	promotionHttp.NewPromotionHandler(r, promoUC)
 
 	// ========== 5. RUTE TERPROTEKSI DENGAN MIDDLEWARE (BARU!) ==========
 	// Buat grup rute baru yang diawali dengan "/admin"
