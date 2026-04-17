@@ -12,7 +12,7 @@ import (
 type Article struct {
 	ID          bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Title       string        `bson:"title" json:"title"`
-	Slug        string        `bson:"slug" json:"slug"` // Contoh: 5-tenda-camping-terbaik
+	Slug        string        `bson:"slug" json:"slug"`
 	Content     string        `bson:"content" json:"content"`
 	Author      string        `bson:"author" json:"author"`
 	Thumbnail   string        `bson:"thumbnail" json:"thumbnail"`

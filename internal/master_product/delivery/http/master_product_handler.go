@@ -17,7 +17,7 @@ func NewMasterProductHandler(r *gin.Engine, us domain.MasterProductUseCase) {
 	handler := &MasterProductHandler{usecase: us}
 
 	// Endpoint khusus untuk detail master product
-	r.GET("/master-products/:id", handler.GetDetailByID)
+	r.GET("/master-product/:id", handler.GetDetailByID)
 }
 
 // GetDetailByID = Handler untuk mendapatkan detail master product beserta penawaran terbaiknya
