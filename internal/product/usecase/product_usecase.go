@@ -54,12 +54,12 @@ func (u *productUseCase) GetProductsWithFilter(
 	}, nil
 }
 
-// GetProductByID = Business logic untuk get single product
-func (u *productUseCase) GetProductByID(ctx context.Context, id string) (domain.Product, error) {
-	if id == "" {
-		return domain.Product{}, errors.New("product ID is required")
-	}
-	return u.repo.GetByID(ctx, id)
+// GetProductByID = Business logic get product lengkap dengan master info
+func (u *productUseCase) GetProductByID(ctx context.Context, id string) (domain.ProductDetail, error) {
+    if id == "" {
+        return domain.ProductDetail{}, errors.New("product ID is required")
+    }
+    return u.repo.GetByIDWithDetail(ctx, id)
 }
 
 func (u *productUseCase) GetDeals(ctx context.Context, limit int64) ([]domain.Product, error) {

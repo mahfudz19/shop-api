@@ -21,7 +21,7 @@ func NewProductHandler(r *gin.Engine, us domain.ProductUseCase) {
 	r.GET("/products/deals", handler.GetDeals)
 	r.GET("/products/stats", handler.GetStats)
 	r.GET("/products", handler.FetchAll)
-	r.GET("/products/:id", handler.GetByID)
+	r.GET("/product/:id", handler.GetByID)
 }
 
 // FetchAll = List dengan pagination

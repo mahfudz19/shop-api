@@ -33,6 +33,11 @@ import (
 	articleHttp "github.com/username/shop-api/internal/article/delivery/http"
 	articleRepo "github.com/username/shop-api/internal/article/repository"
 	articleUseCase "github.com/username/shop-api/internal/article/usecase"
+
+	masterProductHttp "github.com/username/shop-api/internal/master_product/delivery/http"
+	masterProductRepo "github.com/username/shop-api/internal/master_product/repository"
+	masterProductUseCase "github.com/username/shop-api/internal/master_product/usecase"
+
 )
 
 func main() {
@@ -102,6 +107,12 @@ func main() {
 	articleRepository := articleRepo.NewMongoArticleRepository(db)
 	articleUseCase := articleUseCase.NewArticleUseCase(articleRepository)
 	articleHttp.NewArticleHandler(r, articleUseCase)
+
+	// ========== MASTER PRODUCT WIRING (Rute Publik) ==========
+	// Endpoint seperti GET /master-products/:id bisa diakses siapa saja tanpa login
+	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
+	masterProductUseCase := masterProductUseCase.NewMasterProductUseCase(masterProductRepository)
+	masterProductHttp.NewMasterProductHandler(r, masterProductUseCase)
 
 	// ========== 5. RUTE TERPROTEKSI DENGAN MIDDLEWARE (BARU!) ==========
 	// Buat grup rute baru yang diawali dengan "/admin"
