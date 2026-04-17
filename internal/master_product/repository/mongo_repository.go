@@ -1,4 +1,4 @@
-// internal/master_product/repository/mongo_repository.go
+// Package repository = Implementasi Repository untuk Master Product menggunakan MongoDB
 package repository
 
 import (
@@ -16,6 +16,7 @@ type mongoMasterProductRepository struct {
 	db *mongo.Database
 }
 
+// NewMongoMasterProductRepository = Inisialisasi MongoDB Repository untuk Master Product
 func NewMongoMasterProductRepository(db *mongo.Database) domain.MasterProductRepository {
 	return &mongoMasterProductRepository{db: db}
 }
@@ -39,7 +40,7 @@ func (m *mongoMasterProductRepository) GetByID(ctx context.Context, id string) (
 
 func (m *mongoMasterProductRepository) GetOffersByMasterID(ctx context.Context, masterID bson.ObjectID) ([]domain.Product, error) {
 	var offers []domain.Product
-	
+
 	// Cari product mentah yang terikat dengan master_product_id ini
 	// Filter anomali dan pastikan confidence tinggi
 	filter := bson.M{
@@ -50,7 +51,7 @@ func (m *mongoMasterProductRepository) GetOffersByMasterID(ctx context.Context, 
 
 	// Langsung urutkan dari harga termurah
 	opts := options.Find().SetSort(bson.D{{Key: "price_rp", Value: 1}})
-	
+
 	cursor, err := m.db.Collection("products").Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err

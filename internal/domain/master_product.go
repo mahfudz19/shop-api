@@ -1,4 +1,4 @@
-// internal/domain/master_product.go
+// Package domain mendefinisikan struktur data dan interface untuk MasterProduct
 package domain
 
 import (
@@ -25,7 +25,6 @@ type MasterProduct struct {
 }
 
 // MasterProductDetail adalah response khusus untuk halaman Detail
-// Menggabungkan data Master dengan daftar penawaran (Offers) dari collection products
 type MasterProductDetail struct {
 	MasterProduct
 	Offers      []Product `json:"offers"`
@@ -35,10 +34,12 @@ type MasterProductDetail struct {
 	TotalOffers int       `json:"total_offers"`
 }
 
+// MasterProductUseCase mendefinisikan business logic untuk MasterProduct
 type MasterProductUseCase interface {
 	GetDetailByID(ctx context.Context, id string) (MasterProductDetail, error)
 }
 
+// MasterProductRepository mendefinisikan operasi database untuk MasterProduct
 type MasterProductRepository interface {
 	GetByID(ctx context.Context, id string) (MasterProduct, error)
 	GetOffersByMasterID(ctx context.Context, masterID bson.ObjectID) ([]Product, error)

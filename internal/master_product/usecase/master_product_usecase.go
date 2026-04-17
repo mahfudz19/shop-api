@@ -1,4 +1,4 @@
-// internal/master_product/usecase/master_product_usecase.go
+// Package usecase = Business logic untuk Master Product
 package usecase
 
 import (
@@ -11,6 +11,7 @@ type masterProductUseCase struct {
 	repo domain.MasterProductRepository
 }
 
+// NewMasterProductUseCase = Inisialisasi Master Product UseCase
 func NewMasterProductUseCase(repo domain.MasterProductRepository) domain.MasterProductUseCase {
 	return &masterProductUseCase{repo: repo}
 }
@@ -29,9 +30,11 @@ func (u *masterProductUseCase) GetDetailByID(ctx context.Context, id string) (do
 	}
 
 	// 3. Mesin Kalkulasi (Engine Logic)
-	var minPrice int64 = 0
-	var maxPrice int64 = 0
-	var savings int64 = 0
+	var (
+		minPrice int64
+		maxPrice int64
+		savings  int64
+	)
 
 	totalOffers := len(offers)
 	if totalOffers > 0 {

@@ -1,4 +1,4 @@
-// internal/master_product/delivery/http/master_product_handler.go
+// Package http = Delivery layer untuk Master Product
 package http
 
 import (
@@ -7,10 +7,12 @@ import (
 	"github.com/username/shop-api/internal/response"
 )
 
+// MasterProductHandler struct untuk handle HTTP request terkait Master Product
 type MasterProductHandler struct {
 	usecase domain.MasterProductUseCase
 }
 
+// NewMasterProductHandler = Inisialisasi routes untuk Master Product
 func NewMasterProductHandler(r *gin.Engine, us domain.MasterProductUseCase) {
 	handler := &MasterProductHandler{usecase: us}
 
@@ -18,6 +20,7 @@ func NewMasterProductHandler(r *gin.Engine, us domain.MasterProductUseCase) {
 	r.GET("/master-products/:id", handler.GetDetailByID)
 }
 
+// GetDetailByID = Handler untuk mendapatkan detail master product beserta penawaran terbaiknya
 func (h *MasterProductHandler) GetDetailByID(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
