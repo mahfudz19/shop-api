@@ -66,6 +66,11 @@ func (m *mongoProductRepository) FetchWithFilter(
 		bsonFilter["price_rp"] = priceFilter
 	}
 
+	// Filter by rating (products with rating >= requested rating)
+	if filter.Rating > 0 {
+		bsonFilter["rating"] = bson.M{"$gte": filter.Rating}
+	}
+
 	// 2. HITUNG TOTAL (untuk metadata pagination)
 	total, err := collection.CountDocuments(ctx, bsonFilter)
 	if err != nil {

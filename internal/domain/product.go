@@ -48,6 +48,7 @@ type ProductFilter struct {
 	MaxPrice    int64
 	SortBy      string
 	SortOrder   string
+	Rating      float64
 	Page        int64
 	Limit       int64
 }

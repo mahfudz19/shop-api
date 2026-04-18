@@ -1,4 +1,4 @@
-// Package http = Delivery layer untuk Product
+// Package http berisi handler HTTP untuk entitas Product
 package http
 
 import (
@@ -55,6 +55,11 @@ func (h *ProductHandler) FetchAll(c *gin.Context) {
 	if limit := c.Query("limit"); limit != "" {
 		if val, err := strconv.ParseInt(limit, 10, 64); err == nil {
 			filter.Limit = val
+		}
+	}
+	if rating := c.Query("rating"); rating != "" {
+		if val, err := strconv.ParseFloat(rating, 64); err == nil {
+			filter.Rating = val
 		}
 	}
 
