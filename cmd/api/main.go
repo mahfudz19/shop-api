@@ -15,8 +15,12 @@ import (
 	"github.com/username/shop-api/internal/middleware"
 
 	productHttp "github.com/username/shop-api/internal/product/delivery/http"
-	"github.com/username/shop-api/internal/product/repository"
-	"github.com/username/shop-api/internal/product/usecase"
+	productRepo "github.com/username/shop-api/internal/product/repository"
+	productUsecase "github.com/username/shop-api/internal/product/usecase"
+
+	masterProductHttp "github.com/username/shop-api/internal/master_product/delivery/http"
+	masterProductRepo "github.com/username/shop-api/internal/master_product/repository"
+	masterProductUseCase "github.com/username/shop-api/internal/master_product/usecase"
 
 	userHttp "github.com/username/shop-api/internal/user/delivery/http"
 	userRepo "github.com/username/shop-api/internal/user/repository"
@@ -33,11 +37,6 @@ import (
 	articleHttp "github.com/username/shop-api/internal/article/delivery/http"
 	articleRepo "github.com/username/shop-api/internal/article/repository"
 	articleUseCase "github.com/username/shop-api/internal/article/usecase"
-
-	masterProductHttp "github.com/username/shop-api/internal/master_product/delivery/http"
-	masterProductRepo "github.com/username/shop-api/internal/master_product/repository"
-	masterProductUseCase "github.com/username/shop-api/internal/master_product/usecase"
-
 )
 
 func main() {
@@ -80,8 +79,8 @@ func main() {
 
 	// ========== PRODUCT WIRING (Rute Publik) ==========
 	// Endpoint seperti GET /products bisa diakses siapa saja tanpa login
-	productRepo := repository.NewMongoProductRepository(db)
-	productUsecase := usecase.NewProductUseCase(productRepo)
+	productRepo := productRepo.NewMongoProductRepository(db)
+	productUsecase := productUsecase.NewProductUseCase(productRepo)
 	productHttp.NewProductHandler(r, productUsecase)
 
 	// ========== USER WIRING (Rute Publik) ==========
