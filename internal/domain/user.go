@@ -7,13 +7,43 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
+// UserRole type untuk role user
+type UserRole string
+
+const (
+	// RoleAdmin memiliki akses penuh
+	RoleAdmin UserRole = "admin"
+	// RoleUser memiliki akses terbatas
+	RoleUser UserRole = "user"
+)
+
+// UserStatus type untuk status user
+type UserStatus string
+
+const (
+	// StatusActive user aktif
+	StatusActive UserStatus = "active"
+	// StatusInactive user tidak aktif
+	StatusInactive UserStatus = "inactive"
+)
+
+// IsValid method untuk memvalidasi nilai UserRole
+func (r UserRole) IsValid() bool {
+	switch r {
+	case RoleAdmin, RoleUser:
+		return true
+	}
+	return false
+}
+
 // User merepresentasikan user di database
 type User struct {
 	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Email     string        `bson:"email" json:"email"`
 	Password  string        `bson:"password" json:"-"`
 	Name      string        `bson:"name" json:"name"`
-	Role      string        `bson:"role" json:"role"`
+	Role      UserRole      `bson:"role" json:"role"`
+	Status    UserStatus    `bson:"status" json:"status"`
 	CreatedAt time.Time     `bson:"createdAt" json:"createdAt"`
 	UpdatedAt time.Time     `bson:"updatedAt" json:"updatedAt"`
 }

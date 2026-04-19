@@ -51,12 +51,21 @@ func (u *userUseCase) Register(ctx context.Context, user domain.User) error {
 	}
 	user.Password = string(hashedPassword)
 
-	// 5. Set default values
+	// 5. Set default values & Validasi Enum
 	if user.Role == "" {
-		user.Role = "user" // default: bukan admin
+		user.Role = domain.RoleUser
 	}
+
+	// 7. Set status default
+	user.Status = domain.StatusActive
+
+	// Double-check: Pastikan Role valid sebelum masuk ke Database
+	if !user.Role.IsValid() {
+		return errors.New("role tidak valid untuk sistem")
+	}
+
 	if user.Name == "" {
-		user.Name = "User" // default name
+		user.Name = "User"
 	}
 
 	now := time.Now()

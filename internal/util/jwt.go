@@ -7,19 +7,21 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/username/shop-api/internal/domain"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 // JWTClaim struct untuk payload JWT
 type JWTClaim struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
+	UserID string          `json:"user_id"`
+	Email  string          `json:"email"`
+	Role   domain.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken membuat JWT baru yang valid selama 24 jam
-func GenerateToken(userID string, email string) (string, error) {
+func GenerateToken(userID string, email string, role domain.UserRole) (string, error) {
 	// Jika env belum terbaca, coba ambil lagi
 	if len(jwtSecret) == 0 {
 		jwtSecret = []byte(os.Getenv("JWT_SECRET"))
@@ -29,6 +31,7 @@ func GenerateToken(userID string, email string) (string, error) {
 	claims := &JWTClaim{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},

@@ -32,6 +32,7 @@ type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
 	Name     string `json:"name"`
+	Role     string `json:"role" binding:"omitempty,oneof=admin user"`
 }
 
 // Register handler
@@ -47,6 +48,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 		Name:     req.Name,
+		Role:     domain.UserRole(req.Role),
 	}
 
 	if err := h.usecase.Register(c.Request.Context(), user); err != nil {
@@ -84,7 +86,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 	// 1. Generate JWT Token
 	// Catatan: import "github.com/username/shop-api/internal/util" di atas
-	tokenString, err := util.GenerateToken(user.ID.Hex(), user.Email)
+	tokenString, err := util.GenerateToken(user.ID.Hex(), user.Email, user.Role)
 	if err != nil {
 		response.ErrorInternal(c, err)
 		return
@@ -99,6 +101,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 		"id":    user.ID.Hex(),
 		"email": user.Email,
 		"name":  user.Name,
+		"role":  user.Role,
 	})
 }
 
