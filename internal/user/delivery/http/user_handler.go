@@ -15,16 +15,19 @@ type UserHandler struct {
 }
 
 // NewUserHandler setup routes
-func NewUserHandler(r *gin.Engine, us domain.UserUseCase) {
+func NewUserHandler(public gin.IRouter, protected gin.IRouter, us domain.UserUseCase) {
 	handler := &UserHandler{usecase: us}
 
 	// Auth routes
-	r.POST("/auth/register", handler.Register)
-	r.POST("/auth/login", handler.Login)
-	r.POST("/auth/logout", handler.Logout)
+	public.POST("/auth/register", handler.Register)
+	public.POST("/auth/login", handler.Login)
+	public.POST("/auth/logout", handler.Logout)
 
 	// User routes
-	r.GET("/users/:id", handler.GetByID)
+	public.GET("/users/:id", handler.GetByID)
+
+	// Rute Protected (Wajib Login)
+	protected.GET("/auth/my", handler.GetMyProfile)
 }
 
 // RegisterRequest struct untuk request body
@@ -124,4 +127,19 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	}
 
 	response.SuccessSingle(c, "User retrieved successfully", user)
+}
+
+// GetMyProfile handler
+func (h *UserHandler) GetMyProfile(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID := userIDVal.(string)
+
+	// Ambil data dari Usecase
+	user, err := h.usecase.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		response.ErrorNotFound(c, "User")
+		return
+	}
+
+	response.SuccessSingle(c, "Berhasil memuat profil", user)
 }

@@ -1,8 +1,9 @@
-// Package middleware untuk menyimpan semua middleware yang digunakan dalam aplikasi
+// Package middleware untuk menyimpan semua middleware auth
 package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/username/shop-api/internal/domain"
 	"github.com/username/shop-api/internal/response"
 	"github.com/username/shop-api/internal/util"
 )
@@ -29,6 +30,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 3. Jika valid, simpan User ID ke context agar bisa dibaca oleh Handler berikutnya
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
+		c.Set("role", domain.UserRole(claims.Role))
 
 		// 4. Lanjut ke proses berikutnya
 		c.Next()

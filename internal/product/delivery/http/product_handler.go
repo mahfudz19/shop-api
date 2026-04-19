@@ -15,13 +15,16 @@ type ProductHandler struct {
 }
 
 // NewProductHandler = Inisialisasi routes untuk Product
-func NewProductHandler(r *gin.Engine, us domain.ProductUseCase) {
+func NewProductHandler(public gin.IRouter, admin gin.IRouter, us domain.ProductUseCase) {
 	handler := &ProductHandler{usecase: us}
 
-	r.GET("/products/deals", handler.GetDeals)
-	r.GET("/products/stats", handler.GetStats)
-	r.GET("/products", handler.FetchAll)
-	r.GET("/product/:id", handler.GetByID)
+	public.GET("/products/deals", handler.GetDeals)
+	public.GET("/products/stats", handler.GetStats)
+	public.GET("/products", handler.FetchAll)
+	public.GET("/product/:id", handler.GetByID)
+
+	// Rute Admin (Wajib Login + Role Admin)
+	admin.GET("/products-admin/stats", handler.GetStatsAdmin)
 }
 
 // FetchAll = List dengan pagination
@@ -130,4 +133,14 @@ func (h *ProductHandler) GetStats(c *gin.Context) {
 	}
 
 	response.SuccessSingle(c, "Success fetch product statistics", stats)
+}
+
+// GetStatsAdmin = Handler stats untuk admin
+func (h *ProductHandler) GetStatsAdmin(c *gin.Context) {
+	// Panggil fungsi Usecase Anda yang menghitung total produk (mockup untuk sekarang)
+	response.SuccessSingle(c, "Statistik Admin Berhasil Dimuat", gin.H{
+		"total_products": 1520,
+		"total_shops":    45,
+		"active_deals":   12,
+	})
 }

@@ -34,6 +34,9 @@ import (
 	articleHttp "github.com/username/shop-api/internal/article/delivery/http"
 	articleRepo "github.com/username/shop-api/internal/article/repository"
 	articleUseCase "github.com/username/shop-api/internal/article/usecase"
+
+	"github.com/username/shop-api/internal/domain"
+	"github.com/username/shop-api/internal/middleware"
 )
 
 func main() {
@@ -68,49 +71,71 @@ func main() {
 
 	// 3. Init Gin
 	r := gin.Default()
-	if err := r.SetTrustedProxies(nil); err != nil {
-		log.Printf("Warning: Gagal set trusted proxies: %v", err)
-	}
 
-	// 4. WIRING CLEAN ARCHITECTURE
+	// ==========================================
+	// 4. PEMBUATAN GRUP RUTE (ROUTER GROUPS)
+	// ==========================================
 
-	// ========== PRODUCT WIRING (Rute Publik) ==========
-	// Endpoint seperti GET /products bisa diakses siapa saja tanpa login
-	productRepo := productRepo.NewMongoProductRepository(db)
-	productUsecase := productUsecase.NewProductUseCase(productRepo)
-	productHttp.NewProductHandler(r, productUsecase)
+	// Grup Publik (Tanpa Middleware, siapa saja bisa akses)
+	publicRoutes := r.Group("")
 
-	// ========== USER WIRING (Rute Publik) ==========
-	// Endpoint /auth/login dan /auth/register harus publik
+	// Grup Protected (Wajib Login)
+	protectedRoutes := r.Group("")
+	protectedRoutes.Use(middleware.AuthMiddleware())
+
+	// Grup Admin (Wajib Login + Wajib Role Admin)
+	adminRoutes := r.Group("")
+	adminRoutes.Use(middleware.AuthMiddleware())
+	adminRoutes.Use(middleware.RequireRole(domain.RoleAdmin))
+
+	// ==========================================
+	// 5. WIRING HANDLERS & USECASES
+	// ==========================================
+
+	// User
 	userRepository := userRepo.NewMongoUserRepository(db)
 	userUseCase := userUsecase.NewUserUseCase(userRepository)
-	userHttp.NewUserHandler(r, userUseCase)
+	// (Memberikan 3 argumen: public, protected, usecase)
+	userHttp.NewUserHandler(publicRoutes, protectedRoutes, userUseCase)
 
-	// ========== CATEGORY WIRING (Rute Publik) ==========
-	// Endpoint seperti GET /categories bisa diakses siapa saja tanpa login
+	// Product
+	productRepository := productRepo.NewMongoProductRepository(db)
+	productUsecase := productUsecase.NewProductUseCase(productRepository)
+	// (Memberikan 3 argumen: public, admin, usecase)
+	productHttp.NewProductHandler(publicRoutes, adminRoutes, productUsecase)
+
+	// Master Product
+	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
+	masterProductUseCase := masterProductUseCase.NewMasterProductUseCase(masterProductRepository)
+	// (Memberikan 3 argumen: public, protected, usecase)
+	masterProductHttp.NewMasterProductHandler(publicRoutes, protectedRoutes, masterProductUseCase)
+
+	// ==========================================
+	// WIRING HANDLERS LAMA (Yang Belum Di-refactor)
+	// ==========================================
+	// Catatan: Jika handler ini (Category, Promotion, Article) masih meminta 2 argumen
+	// (*gin.Engine dan Usecase), kita tetap bisa menggunakan `r` sebagai engine utamanya.
+	// Jika nanti Anda me-refactor handler ini untuk memisahkan rute admin/publik,
+	// ubah `r` menjadi `publicRoutes` atau `adminRoutes` seperti di atas.
+
+	// Category
 	catRepo := categoryRepo.NewMongoCategoryRepository(db)
 	catUC := categoryUseCase.NewCategoryUseCase(catRepo)
 	categoryHttp.NewCategoryHandler(r, catUC)
 
-	// ========== PROMOTION WIRING (Rute Publik) ==========
-	// Endpoint seperti GET /promotions bisa diakses siapa saja tanpa login
+	// Promotion
 	promoRepo := promotionRepo.NewMongoPromotionRepository(db)
 	promoUC := promotionUseCase.NewPromotionUseCase(promoRepo)
 	promotionHttp.NewPromotionHandler(r, promoUC)
 
-	// ========== ARTICLE WIRING (Rute Publik) ==========
-	// Endpoint seperti GET /articles bisa diakses siapa saja tanpa login
+	// Article
 	articleRepository := articleRepo.NewMongoArticleRepository(db)
 	articleUseCase := articleUseCase.NewArticleUseCase(articleRepository)
 	articleHttp.NewArticleHandler(r, articleUseCase)
 
-	// ========== MASTER PRODUCT WIRING (Rute Publik) ==========
-	// Endpoint seperti GET /master-products/:id bisa diakses siapa saja tanpa login
-	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
-	masterProductUseCase := masterProductUseCase.NewMasterProductUseCase(masterProductRepository)
-	masterProductHttp.NewMasterProductHandler(r, masterProductUseCase)
-
+	// ==========================================
 	// 6. Run Server
+	// ==========================================
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -118,6 +143,6 @@ func main() {
 	log.Printf("🚀 Server: http://localhost:%s", port)
 
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("❌ Server error: %v", err)
+		log.Fatalf("❌ Failed to start server: %v", err)
 	}
 }

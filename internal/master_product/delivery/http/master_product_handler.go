@@ -13,11 +13,14 @@ type MasterProductHandler struct {
 }
 
 // NewMasterProductHandler = Inisialisasi routes untuk Master Product
-func NewMasterProductHandler(r *gin.Engine, us domain.MasterProductUseCase) {
+func NewMasterProductHandler(public gin.IRouter, protected gin.IRouter, us domain.MasterProductUseCase) {
 	handler := &MasterProductHandler{usecase: us}
 
 	// Endpoint khusus untuk detail master product
-	r.GET("/master-product/:id", handler.GetDetailByID)
+	public.GET("/master-product/:id", handler.GetDetailByID)
+
+	// Rute Protected (Wajib Login)
+	protected.GET("/master-product/:id/test", handler.TestAuth)
 }
 
 // GetDetailByID = Handler untuk mendapatkan detail master product beserta penawaran terbaiknya
@@ -32,4 +35,17 @@ func (h *MasterProductHandler) GetDetailByID(c *gin.Context) {
 	}
 
 	response.SuccessSingle(c, "Master product detail retrieved successfully", detail)
+}
+
+// TestAuth = Handler testing
+func (h *MasterProductHandler) TestAuth(c *gin.Context) {
+	id := c.Param("id")
+	userID, _ := c.Get("user_id")
+	role, _ := c.Get("role")
+
+	response.SuccessSingle(c, "Akses master product berhasil", gin.H{
+		"master_product_id": id,
+		"accessed_by":       userID,
+		"current_role":      role,
+	})
 }
