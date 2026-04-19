@@ -29,7 +29,7 @@ func (u *productUseCase) GetProductsWithFilter(
 		filter.Limit = 10
 	}
 	if filter.Limit > 100 {
-		filter.Limit = 100 // max 100 item per halaman
+		filter.Limit = 100
 	}
 	if filter.Page <= 0 {
 		filter.Page = 1
@@ -56,10 +56,10 @@ func (u *productUseCase) GetProductsWithFilter(
 
 // GetProductByID = Business logic get product lengkap dengan master info
 func (u *productUseCase) GetProductByID(ctx context.Context, id string) (domain.ProductDetail, error) {
-    if id == "" {
-        return domain.ProductDetail{}, errors.New("product ID is required")
-    }
-    return u.repo.GetByIDWithDetail(ctx, id)
+	if id == "" {
+		return domain.ProductDetail{}, errors.New("product ID is required")
+	}
+	return u.repo.GetByIDWithDetail(ctx, id)
 }
 
 func (u *productUseCase) GetDeals(ctx context.Context, limit int64) ([]domain.Product, error) {
@@ -67,7 +67,7 @@ func (u *productUseCase) GetDeals(ctx context.Context, limit int64) ([]domain.Pr
 	if limit <= 0 {
 		limit = 10
 	} else if limit > 50 {
-		limit = 50 // Maksimal 50 item untuk alasan performa
+		limit = 50
 	}
 
 	return u.repo.GetDeals(ctx, limit)

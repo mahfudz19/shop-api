@@ -4,15 +4,12 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	"github.com/username/shop-api/internal/config"
-
-	"github.com/username/shop-api/internal/middleware"
 
 	productHttp "github.com/username/shop-api/internal/product/delivery/http"
 	productRepo "github.com/username/shop-api/internal/product/repository"
@@ -112,30 +109,6 @@ func main() {
 	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
 	masterProductUseCase := masterProductUseCase.NewMasterProductUseCase(masterProductRepository)
 	masterProductHttp.NewMasterProductHandler(r, masterProductUseCase)
-
-	// ========== 5. RUTE TERPROTEKSI DENGAN MIDDLEWARE (BARU!) ==========
-	// Buat grup rute baru yang diawali dengan "/admin"
-	adminRoutes := r.Group("/admin")
-
-	// Pasang satpam (middleware) hanya untuk grup rute ini
-	adminRoutes.Use(middleware.AuthMiddleware())
-
-	// Contoh endpoint yang sudah dilindungi satpam
-	// Rute aslinya menjadi: GET /admin/dashboard
-	adminRoutes.GET("/dashboard", func(c *gin.Context) {
-		// Kita bisa mengambil ID pengguna dari context yang sudah disisipkan oleh middleware
-		userID, _ := c.Get("user_id")
-		userEmail, _ := c.Get("user_email")
-
-		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"message": "Selamat datang di area admin!",
-			"data": gin.H{
-				"id":    userID,
-				"email": userEmail,
-			},
-		})
-	})
 
 	// 6. Run Server
 	port := os.Getenv("PORT")
