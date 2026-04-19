@@ -2,6 +2,8 @@
 package http
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/username/shop-api/internal/domain"
 	"github.com/username/shop-api/internal/response"
@@ -87,19 +89,17 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// 1. Generate JWT Token
-	// Catatan: import "github.com/username/shop-api/internal/util" di atas
 	tokenString, err := util.GenerateToken(user.ID.Hex(), user.Email, user.Role)
 	if err != nil {
 		response.ErrorInternal(c, err)
 		return
 	}
 
-	// 2. Set HttpOnly Cookie
-	// SetCookie(name, value, maxAge, path, domain, secure, httpOnly)
-	c.SetCookie("auth_token", tokenString, 3600*24, "/", "localhost", false, true)
+	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	isSecure := os.Getenv("APP_ENV") == "production"
 
-	// 3. Kembalikan Response Sukses tanpa mengirimkan token di body JSON!
+	c.SetCookie("auth_token", tokenString, 3600*24, "/", cookieDomain, isSecure, true)
+
 	response.SuccessSingle(c, "Login successful", gin.H{
 		"id":    user.ID.Hex(),
 		"email": user.Email,
@@ -110,8 +110,10 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 // Logout handler
 func (h *UserHandler) Logout(c *gin.Context) {
-	// Hapus cookie dengan cara mengatur MaxAge ke -1
-	c.SetCookie("auth_token", "", -1, "/", "localhost", false, true)
+	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	isSecure := os.Getenv("APP_ENV") == "production"
+
+	c.SetCookie("auth_token", "", -1, "/", cookieDomain, isSecure, true)
 
 	response.SuccessSingle(c, "Logout successful", nil)
 }
