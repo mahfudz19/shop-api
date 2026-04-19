@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -72,7 +73,8 @@ func main() {
 	// 3. Init Gin
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
-		c.String(200, "online")
+		content := fmt.Sprintf("online for %s", os.Getenv("APP_ENV"))
+		c.String(200, content)
 	})
 
 	// ==========================================
