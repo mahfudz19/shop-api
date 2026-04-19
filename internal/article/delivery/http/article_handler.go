@@ -13,9 +13,9 @@ type ArticleHandler struct {
 }
 
 // NewArticleHandler membuat instance baru dari ArticleHandler dan mendaftarkan rute
-func NewArticleHandler(r *gin.Engine, us domain.ArticleUseCase) {
+func NewArticleHandler(public gin.IRouter, admin gin.IRouter, us domain.ArticleUseCase) {
 	h := &ArticleHandler{usecase: us}
-	group := r.Group("/articles")
+	group := public.Group("/articles")
 	{
 		group.GET("", h.GetAll)
 		group.GET("/slug/:slug", h.GetBySlug) // URL SEO: /articles/slug/5-tenda-camping-terbaik

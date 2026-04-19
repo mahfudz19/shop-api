@@ -15,11 +15,11 @@ type CategoryHandler struct {
 }
 
 // NewCategoryHandler membuat instance baru dari CategoryHandler dan mengatur routing untuk kategori
-func NewCategoryHandler(r *gin.Engine, us domain.CategoryUseCase) {
+func NewCategoryHandler(public gin.IRouter, admin gin.IRouter, us domain.CategoryUseCase) {
 	handler := &CategoryHandler{usecase: us}
 
 	// Grouping routes untuk API categories
-	categoryRoutes := r.Group("/categories")
+	categoryRoutes := public.Group("/categories")
 	{
 		categoryRoutes.POST("/sync", handler.SyncCategories)
 

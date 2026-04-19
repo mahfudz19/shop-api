@@ -71,6 +71,9 @@ func main() {
 
 	// 3. Init Gin
 	r := gin.Default()
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "online")
+	})
 
 	// ==========================================
 	// 4. PEMBUATAN GRUP RUTE (ROUTER GROUPS)
@@ -95,43 +98,32 @@ func main() {
 	// User
 	userRepository := userRepo.NewMongoUserRepository(db)
 	userUseCase := userUsecase.NewUserUseCase(userRepository)
-	// (Memberikan 3 argumen: public, protected, usecase)
 	userHttp.NewUserHandler(publicRoutes, protectedRoutes, userUseCase)
 
 	// Product
 	productRepository := productRepo.NewMongoProductRepository(db)
 	productUsecase := productUsecase.NewProductUseCase(productRepository)
-	// (Memberikan 3 argumen: public, admin, usecase)
 	productHttp.NewProductHandler(publicRoutes, adminRoutes, productUsecase)
 
 	// Master Product
 	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
 	masterProductUseCase := masterProductUseCase.NewMasterProductUseCase(masterProductRepository)
-	// (Memberikan 3 argumen: public, protected, usecase)
 	masterProductHttp.NewMasterProductHandler(publicRoutes, protectedRoutes, masterProductUseCase)
-
-	// ==========================================
-	// WIRING HANDLERS LAMA (Yang Belum Di-refactor)
-	// ==========================================
-	// Catatan: Jika handler ini (Category, Promotion, Article) masih meminta 2 argumen
-	// (*gin.Engine dan Usecase), kita tetap bisa menggunakan `r` sebagai engine utamanya.
-	// Jika nanti Anda me-refactor handler ini untuk memisahkan rute admin/publik,
-	// ubah `r` menjadi `publicRoutes` atau `adminRoutes` seperti di atas.
 
 	// Category
 	catRepo := categoryRepo.NewMongoCategoryRepository(db)
 	catUC := categoryUseCase.NewCategoryUseCase(catRepo)
-	categoryHttp.NewCategoryHandler(r, catUC)
+	categoryHttp.NewCategoryHandler(publicRoutes, protectedRoutes, catUC)
 
 	// Promotion
 	promoRepo := promotionRepo.NewMongoPromotionRepository(db)
 	promoUC := promotionUseCase.NewPromotionUseCase(promoRepo)
-	promotionHttp.NewPromotionHandler(r, promoUC)
+	promotionHttp.NewPromotionHandler(publicRoutes, protectedRoutes, promoUC)
 
 	// Article
 	articleRepository := articleRepo.NewMongoArticleRepository(db)
 	articleUseCase := articleUseCase.NewArticleUseCase(articleRepository)
-	articleHttp.NewArticleHandler(r, articleUseCase)
+	articleHttp.NewArticleHandler(publicRoutes, protectedRoutes, articleUseCase)
 
 	// ==========================================
 	// 6. Run Server
