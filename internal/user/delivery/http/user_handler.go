@@ -85,7 +85,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 	user, err := h.usecase.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		// Gunakan ErrorUnauthorized untuk login gagal
-		response.ErrorUnauthorized(c, "Invalid email or password")
+		response.ErrorUnauthorized(c, err.Error())
 		return
 	}
 

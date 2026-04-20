@@ -85,7 +85,7 @@ func (u *userUseCase) Login(ctx context.Context, email, password string) (domain
 	user, err := u.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return domain.User{}, errors.New("invalid email or password")
+			return domain.User{}, errors.New("invalid email")
 		}
 		return domain.User{}, err
 	}
@@ -93,7 +93,11 @@ func (u *userUseCase) Login(ctx context.Context, email, password string) (domain
 	// Verify password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return domain.User{}, errors.New("invalid email or password")
+		return domain.User{}, errors.New("invalid password")
+	}
+
+	if user.Status != domain.StatusActive {
+		return domain.User{}, errors.New("account is inactive. please contact administrator")
 	}
 
 	// Jangan return password
