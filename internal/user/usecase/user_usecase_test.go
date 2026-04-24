@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/username/shop-api/internal/domain"
-	"github.com/username/shop-api/internal/user/mocks"
+	"github.com/username/shop-api/internal/mocks"
 	"github.com/username/shop-api/internal/user/usecase"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -19,7 +19,7 @@ func TestGetUserByID(t *testing.T) {
 	type testCase struct {
 		name           string
 		inputID        string
-		mockSetup      func(m *mocks.MockUserRepository)
+		mockSetup      func(m *mocks.UserRepository)
 		expectedError  error
 		expectedResult domain.User
 	}
@@ -28,7 +28,7 @@ func TestGetUserByID(t *testing.T) {
 		{
 			name:    "Gagal karena ID kosong",
 			inputID: "",
-			mockSetup: func(_ *mocks.MockUserRepository) {
+			mockSetup: func(_ *mocks.UserRepository) {
 			},
 			expectedError:  errors.New("user ID is required"),
 			expectedResult: domain.User{},
@@ -36,7 +36,7 @@ func TestGetUserByID(t *testing.T) {
 		{
 			name:    "Gagal karena User tidak ditemukan di Database",
 			inputID: "123",
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				m.On("GetByID", mock.Anything, "123").Return(domain.User{}, mongo.ErrNoDocuments).Once()
 			},
 			expectedError:  errors.New("user not found"),
@@ -45,7 +45,7 @@ func TestGetUserByID(t *testing.T) {
 		{
 			name:    "Sukses mengambil data User",
 			inputID: "999",
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				fakeUser := domain.User{
 					Name:     "Mahfudz",
 					Email:    "test@test.com",
@@ -64,7 +64,7 @@ func TestGetUserByID(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockUserRepository)
+			mockRepo := new(mocks.UserRepository)
 			tc.mockSetup(mockRepo)
 
 			userUC := usecase.NewUserUseCase(mockRepo)
@@ -81,7 +81,7 @@ func TestRegister(t *testing.T) {
 	type testCase struct {
 		name          string
 		inputUser     domain.User
-		mockSetup     func(m *mocks.MockUserRepository)
+		mockSetup     func(m *mocks.UserRepository)
 		expectedError error
 	}
 
@@ -92,7 +92,7 @@ func TestRegister(t *testing.T) {
 				Email:    "",
 				Password: "password123",
 			},
-			mockSetup:     func(_ *mocks.MockUserRepository) {},
+			mockSetup:     func(_ *mocks.UserRepository) {},
 			expectedError: errors.New("email is required"),
 		},
 		{
@@ -101,7 +101,7 @@ func TestRegister(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "123",
 			},
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				m.On("EmailExists", mock.Anything, "test@example.com").Return(false, nil).Once()
 			},
 			expectedError: errors.New("password must be at least 6 characters"),
@@ -112,7 +112,7 @@ func TestRegister(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				m.On("EmailExists", mock.Anything, "test@example.com").Return(true, nil).Once()
 			},
 			expectedError: errors.New("email already registered"),
@@ -124,7 +124,7 @@ func TestRegister(t *testing.T) {
 				Password: "password123",
 				Name:     "Mahfudz M",
 			},
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				// 1. Pastikan email belum ada
 				m.On("EmailExists", mock.Anything, "sukses@example.com").Return(false, nil).Once()
 				// 2. Pastikan fungsi Create dipanggil, kembalikan nilai sukses (nil)
@@ -136,7 +136,7 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockUserRepository)
+			mockRepo := new(mocks.UserRepository)
 			tc.mockSetup(mockRepo)
 
 			userUC := usecase.NewUserUseCase(mockRepo)
@@ -153,7 +153,7 @@ func TestLogin(t *testing.T) {
 		name          string
 		inputEmail    string
 		inputPassword string
-		mockSetup     func(m *mocks.MockUserRepository)
+		mockSetup     func(m *mocks.UserRepository)
 		expectedError error
 		expectedUser  domain.User
 	}
@@ -165,7 +165,7 @@ func TestLogin(t *testing.T) {
 			name:          "Gagal karena user tidak ditemukan",
 			inputEmail:    "notfound@example.com",
 			inputPassword: "password123",
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				m.On("GetByEmail", mock.Anything, "notfound@example.com").Return(domain.User{}, mongo.ErrNoDocuments).Once()
 			},
 			expectedError: errors.New("invalid email"),
@@ -175,7 +175,7 @@ func TestLogin(t *testing.T) {
 			name:          "Gagal karena password salah",
 			inputEmail:    "test@example.com",
 			inputPassword: "wrongpassword",
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				m.On("GetByEmail", mock.Anything, "test@example.com").Return(domain.User{
 					Email:    "test@example.com",
 					Password: string(hashedPassword),
@@ -189,7 +189,7 @@ func TestLogin(t *testing.T) {
 			name:          "Sukses login",
 			inputEmail:    "active@example.com",
 			inputPassword: "password123",
-			mockSetup: func(m *mocks.MockUserRepository) {
+			mockSetup: func(m *mocks.UserRepository) {
 				m.On("GetByEmail", mock.Anything, "active@example.com").Return(domain.User{
 					ID:       bson.NewObjectID(),
 					Email:    "active@example.com",
@@ -210,7 +210,7 @@ func TestLogin(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockUserRepository)
+			mockRepo := new(mocks.UserRepository)
 			tc.mockSetup(mockRepo)
 
 			userUC := usecase.NewUserUseCase(mockRepo)

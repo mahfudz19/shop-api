@@ -43,6 +43,11 @@ build-linux:
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(BUILD_PATH)/$(APP_NAME)-linux $(MAIN_PATH)/main.go
 	@echo "$(GREEN)✅ Linux build complete: $(BUILD_PATH)/$(APP_NAME)-linux$(NC)"
 
+## moker: Run mock server
+mock:
+	@echo "🛠️ Generating all mocks..."
+	@mockery --all --dir=internal/domain --output=internal/mocks --case=underscore
+
 ## test: Run all tests
 test:
 	@echo "$(YELLOW)🧪 Running tests...$(NC)"
