@@ -1,0 +1,18 @@
+{
+	"mcpServers": {
+		"mongodb-lokal": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"mongodb-mcp-server@latest",
+				"--connectionString",
+				"mongodb+srv://scraper-m:q64uuRs4fBzsTaUh@cluster0.oda8nbl.mongodb.net/"
+			],
+			"alwaysAllow": [
+				"list-collections",
+				"list-databases",
+				"find"
+			]
+		}
+	}
+}
