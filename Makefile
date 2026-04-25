@@ -50,8 +50,10 @@ mock:
 
 ## test: Run all tests
 test:
-	@echo "$(YELLOW)🧪 Running tests...$(NC)"
-	@if command -v gotestsum >/dev/null 2>&1; then \
+	@echo "$(YELLOW)🧪 Running Integration & Unit Tests...$(NC)"
+	@export MONGODB_TEST_URI="mongodb://localhost:27017/shop-test"; \
+	export MONGODB_TEST_NAME="shop-test"; \
+	if command -v gotestsum >/dev/null 2>&1; then \
 		gotestsum --format pkgname-and-test-fails -- -v ./...; \
 	else \
 		echo "$(RED)gotestsum not found. Falling back to default go test...$(NC)"; \
@@ -61,7 +63,9 @@ test:
 ## test-coverage: Run tests with coverage report
 test-coverage:
 	@echo "$(YELLOW)📊 Generating coverage report...$(NC)"
-	@if command -v gotestsum >/dev/null 2>&1; then \
+	@export MONGODB_TEST_URI="mongodb://localhost:27017/shop-test"; \
+	export MONGODB_TEST_NAME="shop-test"; \
+	if command -v gotestsum >/dev/null 2>&1; then \
 		gotestsum --format pkgname-and-test-fails -- -coverprofile=coverage.out ./...; \
 	else \
 		echo "$(RED)gotestsum not found. Falling back to default go test...$(NC)"; \

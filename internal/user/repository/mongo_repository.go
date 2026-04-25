@@ -3,7 +3,6 @@ package repository
 
 import (
 	"context"
-	"strings"
 
 	"github.com/username/shop-api/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -57,10 +56,9 @@ func (m *mongoUserRepository) GetByID(ctx context.Context, id string) (domain.Us
 
 // EmailExists cek apakah email sudah terdaftar
 func (m *mongoUserRepository) EmailExists(ctx context.Context, email string) (bool, error) {
-	// Normalize email (lowercase)
-	email = strings.ToLower(email)
+	opts := options.Count().SetCollation(&options.Collation{Locale: "en", Strength: 2})
 
-	count, err := m.db.Collection(m.collection).CountDocuments(ctx, bson.M{"email": email})
+	count, err := m.db.Collection(m.collection).CountDocuments(ctx, bson.M{"email": email}, opts)
 	if err != nil {
 		return false, err
 	}
