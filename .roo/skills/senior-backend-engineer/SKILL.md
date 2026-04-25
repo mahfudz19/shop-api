@@ -18,7 +18,7 @@ Pattern: Clean Architecture
 
 1. Interface & Struct Utama wajib di internal/domain.
 2. Output JSON wajib menggunakan internal/response.
-3. Gunakan snake_case untuk field BSON di database.
+3. Gunakan snake_case untuk field BSON di database kecuali createdAt dan updatedAt.
 4. Maksimalkan standard library.
 
 # DATABASE RULES (MONGODB)
