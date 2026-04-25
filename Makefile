@@ -77,7 +77,9 @@ test-coverage:
 ## bench: Run only benchmark tests
 bench:
 	@echo "$(YELLOW)🚀 Running Benchmarks...$(NC)"
-	@go test -run=^$$ -bench=. -benchmem ./...
+	@export MONGODB_TEST_URI="mongodb://localhost:27017/shop-test"; \
+	export MONGODB_TEST_NAME="shop-test"; \
+	go test -run=^$$ -bench=. -benchmem ./...
 	@echo "$(GREEN)✅ Benchmarks complete!$(NC)"
 
 ## tidy: Tidy and download dependencies
