@@ -1,6 +1,6 @@
 {
 	"mcpServers": {
-		"mongodb-lokal": {
+		"mongodb-dev": {
 			"command": "npx",
 			"args": [
 				"-y",
