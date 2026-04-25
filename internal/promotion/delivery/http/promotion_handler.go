@@ -13,7 +13,7 @@ type PromotionHandler struct {
 }
 
 // NewPromotionHandler membuat instance baru dari PromotionHandler dan mendaftarkan route
-func NewPromotionHandler(public gin.IRouter, admin gin.IRouter, us domain.PromotionUseCase) {
+func NewPromotionHandler(public gin.IRouter, _ gin.IRouter, us domain.PromotionUseCase) {
 	h := &PromotionHandler{usecase: us}
 
 	group := public.Group("/promotions")

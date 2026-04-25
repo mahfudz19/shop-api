@@ -51,15 +51,24 @@ mock:
 ## test: Run all tests
 test:
 	@echo "$(YELLOW)🧪 Running tests...$(NC)"
-	@go test -v ./...
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		gotestsum --format pkgname-and-test-fails -- -v ./...; \
+	else \
+		echo "$(RED)gotestsum not found. Falling back to default go test...$(NC)"; \
+		go test -v ./...; \
+	fi
 
 ## test-coverage: Run tests with coverage report
 test-coverage:
-	@echo "$(YELLOW)📊 Running tests with coverage...$(NC)"
-	@go test -cover ./...
-	@go test -coverprofile=coverage.out ./...
+	@echo "$(YELLOW)📊 Generating coverage report...$(NC)"
+	@if command -v gotestsum >/dev/null 2>&1; then \
+		gotestsum --format pkgname-and-test-fails -- -coverprofile=coverage.out ./...; \
+	else \
+		echo "$(RED)gotestsum not found. Falling back to default go test...$(NC)"; \
+		go test -coverprofile=coverage.out ./...; \
+	fi
 	@go tool cover -html=coverage.out -o coverage.html
-	@echo "$(GREEN)✅ Coverage report: coverage.html$(NC)"
+	@echo "$(GREEN)✅ Coverage report generated: open coverage.html in your browser$(NC)"
 
 ## tidy: Tidy and download dependencies
 tidy:

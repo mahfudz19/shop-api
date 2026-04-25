@@ -13,7 +13,7 @@ type ArticleHandler struct {
 }
 
 // NewArticleHandler membuat instance baru dari ArticleHandler dan mendaftarkan rute
-func NewArticleHandler(public gin.IRouter, admin gin.IRouter, us domain.ArticleUseCase) {
+func NewArticleHandler(public gin.IRouter, _ gin.IRouter, us domain.ArticleUseCase) {
 	h := &ArticleHandler{usecase: us}
 	group := public.Group("/articles")
 	{
