@@ -67,3 +67,23 @@ func TestJWT(t *testing.T) {
 		assert.Nil(t, claims)
 	})
 }
+
+// Benchmark untuk mengukur performa Generate Token
+func BenchmarkGenerateToken(b *testing.B) {
+	// Persiapan
+	require.NoError(b, os.Setenv("JWT_SECRET", "test-secret-key"))
+	userID := "user-benchmark-123"
+	email := "benchmark@test.com"
+	role := domain.RoleUser
+
+	b.ResetTimer() // Reset timer agar waktu setup di atas tidak ikut dihitung
+
+	// b.N adalah angka yang ditentukan otomatis oleh Golang (bisa jutaan kali)
+	// Golang akan menjalankan loop ini berulang-ulang untuk mencari rata-rata kecepatannya
+	for i := 0; i < b.N; i++ {
+		_, err := util.GenerateToken(userID, email, role)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}

@@ -74,6 +74,12 @@ test-coverage:
 	@go tool cover -html=coverage.out -o coverage.html
 	@echo "$(GREEN)✅ Coverage report generated: open coverage.html in your browser$(NC)"
 
+## bench: Run only benchmark tests
+bench:
+	@echo "$(YELLOW)🚀 Running Benchmarks...$(NC)"
+	@go test -run=^$$ -bench=. -benchmem ./...
+	@echo "$(GREEN)✅ Benchmarks complete!$(NC)"
+
 ## tidy: Tidy and download dependencies
 tidy:
 	@echo "$(YELLOW)📦 Tidying dependencies...$(NC)"

@@ -98,7 +98,6 @@ func TestMongoProductRepository_Integration(t *testing.T) {
 		}
 
 		// Agar field "shop" terbaca oleh GetStats, kita suntik BSON mentah
-		// karena field Shop sepertinya tidak ada di struct utama Anda (mungkin pakai nama lain, kita asumsikan di sini)
 		_, err = testDB.Collection("products").InsertMany(ctx, []interface{}{
 			bson.M{"_id": productsData[0].(domain.Product).ID, "name": productsData[0].(domain.Product).Name, "master_product_id": masterProductID, "price_rp": 25000000, "discount_percent": 0, "location": "Jakarta", "marketplace": "Tokopedia", "rating": 4.9, "shop": "iBox Official", "is_anomaly": false},
 			bson.M{"_id": productsData[1].(domain.Product).ID, "name": productsData[1].(domain.Product).Name, "master_product_id": masterProductID, "price_rp": 22000000, "discount_percent": 10, "location": "Batam", "marketplace": "Shopee", "rating": 4.5, "shop": "BatamGadget", "is_anomaly": false},
@@ -112,7 +111,7 @@ func TestMongoProductRepository_Integration(t *testing.T) {
 
 	t.Run("1. FetchWithFilter - Test Regex Name & Pagination", func(t *testing.T) {
 		filter := domain.ProductFilter{
-			Search: "macbook", // Case insensitive (karena di DB "MacBook")
+			Search: "macbook",
 			Page:   1,
 			Limit:  2,
 		}
@@ -126,9 +125,9 @@ func TestMongoProductRepository_Integration(t *testing.T) {
 
 	t.Run("2. FetchWithFilter - Test Multi-Filter Kompleks (Harga & Rating)", func(t *testing.T) {
 		filter := domain.ProductFilter{
-			MinPrice:  20000000, // Harga di atas 20 Juta
-			MaxPrice:  30000000, // Harga di bawah 30 Juta
-			Rating:    4.8,      // Rating 4.8 ke atas
+			MinPrice:  20000000,
+			MaxPrice:  30000000,
+			Rating:    4.8,
 			SortBy:    "price_rp",
 			SortOrder: "desc",
 		}
