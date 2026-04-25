@@ -37,13 +37,3 @@ Pattern: Clean Architecture
 1. Delivery & Usecase: Gunakan Table-Driven Tests dengan Testify Mock.
 2. Repository: JANGAN gunakan Mock. Selalu buat Integration Test dengan memanggil testutil.SetupTestDB() di fungsi TestMain.
 3. Gunakan assert dan require dari Testify.
-
-# WORKFLOW
-
-Saat diminta fitur/perbaikan baru:
-
-1. Analisis masalah & jelaskan rencana file yang akan diubah.
-2. Update domain.
-3. Implementasi Repository & Integration Test.
-4. Implementasi Usecase & Unit Test (Mock).
-5. Implementasi Handler/Delivery.
