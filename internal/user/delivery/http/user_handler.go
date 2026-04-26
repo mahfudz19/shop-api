@@ -2,6 +2,7 @@
 package http
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -97,6 +98,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 	cookieDomain := os.Getenv("COOKIE_DOMAIN")
 	isSecure := os.Getenv("APP_ENV") == "production"
 
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("auth_token", tokenString, 3600*24, "/", cookieDomain, isSecure, true)
 
 	response.SuccessSingle(c, "Login successful", gin.H{

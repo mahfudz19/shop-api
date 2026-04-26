@@ -87,11 +87,13 @@ func main() {
 	// Grup Protected (Wajib Login)
 	protectedRoutes := r.Group("")
 	protectedRoutes.Use(middleware.AuthMiddleware())
+	protectedRoutes.Use(middleware.CSRFProtection())
 
 	// Grup Admin (Wajib Login + Wajib Role Admin)
 	adminRoutes := r.Group("")
 	adminRoutes.Use(middleware.AuthMiddleware())
 	adminRoutes.Use(middleware.RequireRole(domain.RoleAdmin))
+	adminRoutes.Use(middleware.CSRFProtection())
 
 	// ==========================================
 	// 5. WIRING HANDLERS & USECASES

@@ -171,6 +171,23 @@ func ErrorValidation(c *gin.Context, details string) {
 	})
 }
 
+// ErrorForbidden = 403
+func ErrorForbidden(c *gin.Context, details string) {
+	c.JSON(http.StatusForbidden, BaseResponse{
+		Success: false,
+		Status:  http.StatusForbidden,
+		Message: "Forbidden",
+		Error: &ErrorData{
+			Code:    "FORBIDDEN",
+			Details: details,
+		},
+		Meta: MetaData{
+			Timestamp: nowISO(),
+			RequestID: generateRequestID(),
+		},
+	})
+}
+
 // ErrorUnauthorized = 401
 func ErrorUnauthorized(c *gin.Context, details string) {
 	c.JSON(http.StatusUnauthorized, BaseResponse{
