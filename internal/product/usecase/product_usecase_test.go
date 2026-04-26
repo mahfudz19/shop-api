@@ -117,8 +117,8 @@ func TestGetProductByID(t *testing.T) {
 			name:    "Gagal - Tidak Ditemukan",
 			inputID: "id-ngasal",
 			mockSetup: func(m *mocks.ProductRepository) {
-				m.On("GetByIDWithDetail", mock.Anything, "id-ngasal").
-					Return(domain.ProductDetail{}, errors.New("not found")).Once()
+				m.On("GetByID", mock.Anything, "id-ngasal").
+					Return(domain.Product{}, errors.New("not found")).Once()
 			},
 			expectedError: errors.New("not found"),
 		},
@@ -126,8 +126,8 @@ func TestGetProductByID(t *testing.T) {
 			name:    "Sukses",
 			inputID: "id-valid",
 			mockSetup: func(m *mocks.ProductRepository) {
-				m.On("GetByIDWithDetail", mock.Anything, "id-valid").
-					Return(domain.ProductDetail{Product: domain.Product{Name: "Valid"}}, nil).Once()
+				m.On("GetByID", mock.Anything, "id-valid").
+					Return(domain.Product{Name: "Valid"}, nil).Once()
 			},
 			expectedError: nil,
 		},

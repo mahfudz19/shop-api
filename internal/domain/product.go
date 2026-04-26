@@ -62,13 +62,6 @@ type ProductResponse struct {
 	TotalPages int64     `json:"total_pages"`
 }
 
-// ProductDetail = Response lengkap dengan MasterProduct info
-type ProductDetail struct {
-	Product       Product     `json:"product"`
-	MasterInfo    *MasterInfo `json:"master_info,omitempty"`
-	RelatedOffers []Product   `json:"related_offers,omitempty"` // Produk serupa dari toko lain
-}
-
 // MasterInfo = Data ringkas MasterProduct
 type MasterInfo struct {
 	ID               string                 `json:"id"`
@@ -85,7 +78,7 @@ type MasterInfo struct {
 // ProductUseCase dan ProductRepository tetap sama, hanya ditambahkan method baru untuk GetByID
 type ProductUseCase interface {
 	GetProductsWithFilter(ctx context.Context, filter ProductFilter) (ProductResponse, error)
-	GetProductByID(ctx context.Context, id string) (ProductDetail, error)
+	GetProductByID(ctx context.Context, id string) (Product, error)
 	GetDeals(ctx context.Context, limit int64) ([]Product, error)
 	GetStats(ctx context.Context) (ProductStats, error)
 }
@@ -93,7 +86,7 @@ type ProductUseCase interface {
 // ProductRepository interface untuk database operations
 type ProductRepository interface {
 	FetchWithFilter(ctx context.Context, filter ProductFilter) ([]Product, int64, error)
-	GetByIDWithDetail(ctx context.Context, id string) (ProductDetail, error)
+	GetByID(ctx context.Context, id string) (Product, error)
 	GetDeals(ctx context.Context, limit int64) ([]Product, error)
 	GetStats(ctx context.Context) (ProductStats, error)
 }

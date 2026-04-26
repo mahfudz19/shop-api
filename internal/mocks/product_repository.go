@@ -51,23 +51,23 @@ func (_m *ProductRepository) FetchWithFilter(ctx context.Context, filter domain.
 	return r0, r1, r2
 }
 
-// GetByIDWithDetail provides a mock function with given fields: ctx, id
-func (_m *ProductRepository) GetByIDWithDetail(ctx context.Context, id string) (domain.ProductDetail, error) {
+// GetByID provides a mock function with given fields: ctx, id
+func (_m *ProductRepository) GetByID(ctx context.Context, id string) (domain.Product, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetByIDWithDetail")
+		panic("no return value specified for GetByID")
 	}
 
-	var r0 domain.ProductDetail
+	var r0 domain.Product
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (domain.ProductDetail, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (domain.Product, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) domain.ProductDetail); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) domain.Product); ok {
 		r0 = rf(ctx, id)
 	} else {
-		r0 = ret.Get(0).(domain.ProductDetail)
+		r0 = ret.Get(0).(domain.Product)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {

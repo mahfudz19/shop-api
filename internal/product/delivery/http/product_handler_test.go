@@ -94,7 +94,7 @@ func TestGetByID(t *testing.T) {
 			paramID: "invalid-id",
 			mockSetup: func(m *mocks.ProductUseCase) {
 				m.On("GetProductByID", mock.Anything, "invalid-id").
-					Return(domain.ProductDetail{}, errors.New("not found")).Once()
+					Return(domain.Product{}, errors.New("not found")).Once()
 			},
 			expectedStatusCode: http.StatusNotFound, // Ekspektasi 404 karena hardcoded di handler
 		},
@@ -103,9 +103,7 @@ func TestGetByID(t *testing.T) {
 			paramID: "valid-id",
 			mockSetup: func(m *mocks.ProductUseCase) {
 				m.On("GetProductByID", mock.Anything, "valid-id").
-					Return(domain.ProductDetail{
-						Product: domain.Product{Name: "Tenda"},
-					}, nil).Once()
+					Return(domain.Product{Name: "Tenda"}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},

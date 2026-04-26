@@ -165,26 +165,12 @@ func TestMongoProductRepository_Integration(t *testing.T) {
 		assert.Equal(t, 3, stats.TotalShops, "Harus hanya ada 3 toko unik")
 	})
 
-	t.Run("5. GetByIDWithDetail - Test Cross Collection & Relasi", func(t *testing.T) {
-		detail, err := repo.GetByIDWithDetail(ctx, targetProductID)
+	t.Run("5. GetByID - Test Cross Collection & Relasi", func(t *testing.T) {
+		detail, err := repo.GetByID(ctx, targetProductID)
 
 		require.NoError(t, err)
 
 		// Validasi Produk Utama
-		assert.Equal(t, "MacBook Pro M2 Resmi iBox", detail.Product.Name)
-
-		// Validasi Relasi ke Master Product
-		require.NotNil(t, detail.MasterInfo)
-		assert.Equal(t, "MacBook Pro M2", detail.MasterInfo.Name)
-		assert.Equal(t, "Apple", detail.MasterInfo.Brand)
-
-		// Validasi Penawaran Terkait (Offers)
-		// Total ada 3 produk MacBook. Karena 1 adalah diri sendiri (targetProductID),
-		// Maka Related Offers harus berjumlah 2 (Dan harus mengabaikan produk Asus).
-		assert.Len(t, detail.RelatedOffers, 2)
-		for _, offer := range detail.RelatedOffers {
-			assert.NotEqual(t, targetProductID, offer.ID.Hex(), "Target produk TIDAK BOLEH muncul di related offers ($ne bekerja)")
-			assert.Equal(t, masterProductID, offer.MasterProductID, "Hanya offer dari master product yang sama yang boleh muncul")
-		}
+		assert.Equal(t, "MacBook Pro M2 Resmi iBox", detail.Name)
 	})
 }
