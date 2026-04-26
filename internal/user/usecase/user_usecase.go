@@ -93,7 +93,8 @@ func (u *userUseCase) Login(ctx context.Context, email, password string) (domain
 	// Verify password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return domain.User{}, errors.New("invalid password")
+		// Samakan pesannya untuk mencegah Enumeration
+		return domain.User{}, errors.New("invalid email or password")
 	}
 
 	if user.Status != domain.StatusActive {

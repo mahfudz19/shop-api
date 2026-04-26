@@ -89,6 +89,22 @@ func TestRegister(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
+		{
+			name: "Sukses Register & Tahan Mass Assignment (Hacker Payload)",
+			inputPayload: map[string]interface{}{
+				"email":    "hacker@test.com",
+				"password": "password123",
+				"name":     "Hacker Nakal",
+				"role":     "admin",
+			},
+			mockSetup: func(m *mocks.UserUseCase) {
+				// Validasi Kunci: Pastikan Usecase menerimanya sebagai RoleUser, BUKAN admin!
+				m.On("Register", mock.Anything, mock.MatchedBy(func(user domain.User) bool {
+					return user.Role == domain.RoleUser && user.Email == "hacker@test.com"
+				})).Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusCreated,
+		},
 	}
 
 	for _, tc := range tests {
