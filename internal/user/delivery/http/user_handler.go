@@ -17,7 +17,7 @@ type UserHandler struct {
 }
 
 // NewUserHandler setup routes
-func NewUserHandler(public gin.IRouter, protected gin.IRouter, us domain.UserUseCase) {
+func NewUserHandler(public gin.IRouter, protected gin.IRouter, admin gin.IRouter, us domain.UserUseCase) {
 	handler := &UserHandler{usecase: us}
 
 	// Auth routes
@@ -26,7 +26,7 @@ func NewUserHandler(public gin.IRouter, protected gin.IRouter, us domain.UserUse
 	public.POST("/auth/logout", handler.Logout)
 
 	// User routes
-	public.GET("/users/:id", handler.GetByID)
+	admin.GET("/users/:id", handler.GetByID)
 
 	// Rute Protected (Wajib Login)
 	protected.GET("/auth/my", handler.GetMyProfile)
@@ -37,7 +37,6 @@ type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
 	Name     string `json:"name"`
-	Role     string `json:"role" binding:"omitempty,oneof=admin user"`
 }
 
 // Register handler
@@ -53,7 +52,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 		Name:     req.Name,
-		Role:     domain.UserRole(req.Role),
+		Role:     domain.UserRole("user"),
 	}
 
 	if err := h.usecase.Register(c.Request.Context(), user); err != nil {

@@ -100,7 +100,7 @@ func main() {
 	// User
 	userRepository := userRepo.NewMongoUserRepository(db)
 	userUseCase := userUsecase.NewUserUseCase(userRepository)
-	userHttp.NewUserHandler(publicRoutes, protectedRoutes, userUseCase)
+	userHttp.NewUserHandler(publicRoutes, protectedRoutes, adminRoutes, userUseCase)
 
 	// Product
 	productRepository := productRepo.NewMongoProductRepository(db)

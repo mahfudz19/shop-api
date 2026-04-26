@@ -85,7 +85,7 @@ func (u *userUseCase) Login(ctx context.Context, email, password string) (domain
 	user, err := u.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return domain.User{}, errors.New("invalid email")
+			return domain.User{}, errors.New("invalid email or password")
 		}
 		return domain.User{}, err
 	}

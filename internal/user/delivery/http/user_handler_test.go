@@ -36,7 +36,15 @@ func setupRouter(mockUC *mocks.UserUseCase) *gin.Engine {
 		c.Next()
 	})
 
-	NewUserHandler(public, protected, mockUC)
+	// 3. Setup Router Admin
+	admin := r.Group("/")
+	admin.Use(func(c *gin.Context) {
+		c.Set("user_id", "admin-auth-123")
+		c.Set("role", domain.RoleAdmin)
+		c.Next()
+	})
+
+	NewUserHandler(public, protected, admin, mockUC)
 	return r
 }
 

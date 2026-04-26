@@ -214,7 +214,7 @@ func TestLogin(t *testing.T) {
 			mockSetup: func(m *mocks.UserRepository) {
 				m.On("GetByEmail", mock.Anything, "notfound@example.com").Return(domain.User{}, mongo.ErrNoDocuments).Once()
 			},
-			expectedError: errors.New("invalid email"),
+			expectedError: errors.New("invalid email or password"),
 			expectedUser:  domain.User{},
 		},
 		{
@@ -228,7 +228,7 @@ func TestLogin(t *testing.T) {
 					Status:   domain.StatusActive,
 				}, nil).Once()
 			},
-			expectedError: errors.New("invalid password"),
+			expectedError: errors.New("invalid email or password"),
 			expectedUser:  domain.User{},
 		},
 		{
