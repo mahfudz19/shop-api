@@ -72,10 +72,6 @@ func main() {
 
 	// 3. Init Gin
 	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		content := fmt.Sprintf("online for %s", os.Getenv("APP_ENV"))
-		c.String(200, content)
-	})
 
 	// 4. Rate Limiter - HANYA aktif di production (bukan development)
 	appEnv := os.Getenv("APP_ENV")
@@ -85,6 +81,11 @@ func main() {
 	} else {
 		log.Println("⚠️  Rate Limiter: DISABLED (development mode)")
 	}
+
+	r.GET("/", func(c *gin.Context) {
+		content := fmt.Sprintf("online for %s", os.Getenv("APP_ENV"))
+		c.String(200, content)
+	})
 
 	// ==========================================
 	// 5. PEMBUATAN GRUP RUTE (ROUTER GROUPS)

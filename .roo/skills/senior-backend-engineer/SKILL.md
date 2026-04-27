@@ -21,12 +21,12 @@ Pattern: Clean Architecture
 3. Gunakan snake_case untuk field BSON di database kecuali createdAt dan updatedAt.
 4. Maksimalkan standard library.
 
-# SECURITY RULES (WAJIB)
+# SECURITY & ENVIRONMENT RULES (WAJIB)
 
-1. Information Leakage: DILARANG KERAS mengirim raw error pada production (`err.Error()`) dari database/sistem ke client. Log error di sisi server, dan selalu kirim pesan generic (contoh: "Terjadi kesalahan internal") menggunakan `internal/response`.
-2. Jika di development informasi leakage sangat dianjur kan
-3. CSRF Protection: Semua route mutatif (POST, PUT, PATCH, DELETE) yang bersifat private/admin WAJIB dilindungi oleh middleware CSRF (berbasis pengecekan header `X-Requested-With`).
-4. Anti Mass-Assignment: Jangan pernah meletakkan field sensitif (seperti `Role`, `Status`, atau `Balance`) di dalam struct HTTP Request Binding JSON. Nilai sensitif wajib di-set secara hardcode/manual di Handler atau Usecase.
+1. Centralized Error Handling: DILARANG membuat logika pengecekan `APP_ENV` (dev/prod) di dalam Handler/Usecase. Cukup panggil `response.ErrorInternal(c, err)` dan biarkan package `response` yang otomatis menentukan apakah akan menyembunyikan atau menampilkan raw error berdasarkan environment.
+2. CSRF Protection: Semua route mutatif (POST, PUT, PATCH, DELETE) yang bersifat private/admin WAJIB dilindungi oleh middleware CSRF (berbasis pengecekan header `X-Requested-With`).
+3. Anti Mass-Assignment: Jangan pernah meletakkan field sensitif (seperti `Role`, `Status`, atau `Balance`) di dalam struct HTTP Request Binding JSON. Nilai sensitif wajib di-set secara hardcode/manual di Handler atau Usecase.
+4. Rate Limiting: Middleware Rate Limiter sudah terpasang secara kondisional di `main.go`. Jangan pernah menambahkan logika pembatasan limit request (rate limiting) secara manual di level Handler.
 
 # DATABASE RULES (MONGODB)
 

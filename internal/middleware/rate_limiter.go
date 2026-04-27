@@ -35,7 +35,7 @@ func initRateLimiter() {
 	rateLimiterConfig = &RateLimiterConfig{
 		limiters: make(map[string]*rate.Limiter),
 		mu:       &sync.RWMutex{},
-		rate:     rate.Limit(limitPerMinute) / rate.Every(time.Minute),
+		rate:     rate.Limit(float64(limitPerMinute) / 60.0),
 		burst:    limitPerMinute,
 	}
 
