@@ -2,6 +2,7 @@
 package response
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -139,13 +140,15 @@ func ErrorBadRequest(c *gin.Context, details string) {
 
 // ErrorInternal = 500
 func ErrorInternal(c *gin.Context, err error) {
+	log.Printf("[ERROR] %v", err)
+
 	c.JSON(http.StatusInternalServerError, BaseResponse{
 		Success: false,
 		Status:  http.StatusInternalServerError,
 		Message: "Internal server error",
 		Error: &ErrorData{
 			Code:    "INTERNAL_ERROR",
-			Details: err.Error(),
+			Details: "Terjadi kesalahan internal pada server kami",
 		},
 		Meta: MetaData{
 			Timestamp: nowISO(),
