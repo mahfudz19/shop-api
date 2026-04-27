@@ -4,6 +4,7 @@ package response
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -142,13 +143,22 @@ func ErrorBadRequest(c *gin.Context, details string) {
 func ErrorInternal(c *gin.Context, err error) {
 	log.Printf("[ERROR] %v", err)
 
+	appEnv := os.Getenv("APP_ENV")
+	var errorDetails string
+
+	if appEnv == "development" {
+		errorDetails = err.Error()
+	} else {
+		errorDetails = "Terjadi kesalahan internal pada server kami"
+	}
+
 	c.JSON(http.StatusInternalServerError, BaseResponse{
 		Success: false,
 		Status:  http.StatusInternalServerError,
 		Message: "Internal server error",
 		Error: &ErrorData{
 			Code:    "INTERNAL_ERROR",
-			Details: "Terjadi kesalahan internal pada server kami",
+			Details: errorDetails,
 		},
 		Meta: MetaData{
 			Timestamp: nowISO(),
@@ -165,6 +175,23 @@ func ErrorValidation(c *gin.Context, details string) {
 		Message: "Validation error",
 		Error: &ErrorData{
 			Code:    "VALIDATION_ERROR",
+			Details: details,
+		},
+		Meta: MetaData{
+			Timestamp: nowISO(),
+			RequestID: generateRequestID(),
+		},
+	})
+}
+
+// ErrorTooManyRequests = 429
+func ErrorTooManyRequests(c *gin.Context, details string) {
+	c.JSON(http.StatusTooManyRequests, BaseResponse{
+		Success: false,
+		Status:  http.StatusTooManyRequests,
+		Message: "Too Many Requests",
+		Error: &ErrorData{
+			Code:    "TOO_MANY_REQUESTS",
 			Details: details,
 		},
 		Meta: MetaData{

@@ -23,9 +23,10 @@ Pattern: Clean Architecture
 
 # SECURITY RULES (WAJIB)
 
-1. Information Leakage: DILARANG KERAS mengirim raw error (`err.Error()`) dari database/sistem ke client. Log error di sisi server, dan selalu kirim pesan generic (contoh: "Terjadi kesalahan internal") menggunakan `internal/response`.
-2. CSRF Protection: Semua route mutatif (POST, PUT, PATCH, DELETE) yang bersifat private/admin WAJIB dilindungi oleh middleware CSRF (berbasis pengecekan header `X-Requested-With`).
-3. Anti Mass-Assignment: Jangan pernah meletakkan field sensitif (seperti `Role`, `Status`, atau `Balance`) di dalam struct HTTP Request Binding JSON. Nilai sensitif wajib di-set secara hardcode/manual di Handler atau Usecase.
+1. Information Leakage: DILARANG KERAS mengirim raw error pada production (`err.Error()`) dari database/sistem ke client. Log error di sisi server, dan selalu kirim pesan generic (contoh: "Terjadi kesalahan internal") menggunakan `internal/response`.
+2. Jika di development informasi leakage sangat dianjur kan
+3. CSRF Protection: Semua route mutatif (POST, PUT, PATCH, DELETE) yang bersifat private/admin WAJIB dilindungi oleh middleware CSRF (berbasis pengecekan header `X-Requested-With`).
+4. Anti Mass-Assignment: Jangan pernah meletakkan field sensitif (seperti `Role`, `Status`, atau `Balance`) di dalam struct HTTP Request Binding JSON. Nilai sensitif wajib di-set secara hardcode/manual di Handler atau Usecase.
 
 # DATABASE RULES (MONGODB)
 

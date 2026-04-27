@@ -77,8 +77,17 @@ func main() {
 		c.String(200, content)
 	})
 
+	// 4. Rate Limiter - HANYA aktif di production (bukan development)
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv != "development" {
+		r.Use(middleware.RateLimiter())
+		log.Println("🛡️  Rate Limiter: ACTIVE (production mode)")
+	} else {
+		log.Println("⚠️  Rate Limiter: DISABLED (development mode)")
+	}
+
 	// ==========================================
-	// 4. PEMBUATAN GRUP RUTE (ROUTER GROUPS)
+	// 5. PEMBUATAN GRUP RUTE (ROUTER GROUPS)
 	// ==========================================
 
 	// Grup Publik (Tanpa Middleware, siapa saja bisa akses)
@@ -96,7 +105,7 @@ func main() {
 	adminRoutes.Use(middleware.CSRFProtection())
 
 	// ==========================================
-	// 5. WIRING HANDLERS & USECASES
+	// 6. WIRING HANDLERS & USECASES
 	// ==========================================
 
 	// User
@@ -130,7 +139,7 @@ func main() {
 	articleHttp.NewArticleHandler(publicRoutes, protectedRoutes, articleUseCase)
 
 	// ==========================================
-	// 6. Run Server
+	// 7. Run Server
 	// ==========================================
 	port := os.Getenv("PORT")
 	if port == "" {
