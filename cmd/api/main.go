@@ -73,6 +73,11 @@ func main() {
 	// 3. Init Gin
 	r := gin.Default()
 
+	// 🛡️ SECURITY FIX: Matikan "Trust All Proxies" bawaan Gin
+	if err := r.SetTrustedProxies(nil); err != nil {
+		log.Printf("⚠️ Warning: Gagal mengeset trusted proxies: %v\n", err)
+	}
+
 	// 4. Rate Limiter - HANYA aktif di production (bukan development)
 	appEnv := os.Getenv("APP_ENV")
 	if appEnv != "development" {
