@@ -24,7 +24,8 @@ func NewUserHandler(public gin.IRouter, protected gin.IRouter, admin gin.IRouter
 	// Auth routes
 	public.POST("/auth/register", handler.Register)
 	public.POST("/auth/login", handler.Login)
-	public.POST("/auth/logout", handler.Logout)
+	// Logout dipindahkan ke protectedRoutes agar memerlukan CSRF protection
+	protected.POST("/auth/logout", handler.Logout)
 
 	// User routes
 	admin.GET("/users/:id", handler.GetByID)
