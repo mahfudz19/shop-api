@@ -314,3 +314,172 @@ func TestGetMyProfile(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAll(t *testing.T) {
+	type testCase struct {
+		name               string
+		mockSetup          func(m *mocks.UserUseCase)
+		expectedStatusCode int
+	}
+
+	tests := []testCase{
+		{
+			name: "Sukses GetAll Users",
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("GetAllUsers", mock.Anything).
+					Return([]domain.User{
+						{ID: bson.NewObjectID(), Email: "user1@test.com", Name: "User 1", Role: domain.RoleUser},
+						{ID: bson.NewObjectID(), Email: "user2@test.com", Name: "User 2", Role: domain.RoleAdmin},
+					}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "Gagal GetAll Users (Error Internal)",
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("GetAllUsers", mock.Anything).
+					Return([]domain.User{}, errors.New("database error")).Once()
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockUC := new(mocks.UserUseCase)
+			tc.mockSetup(mockUC)
+
+			r := setupRouter(mockUC)
+
+			req := httptest.NewRequest(http.MethodGet, "/users", nil)
+			rec := httptest.NewRecorder()
+
+			r.ServeHTTP(rec, req)
+
+			assert.Equal(t, tc.expectedStatusCode, rec.Code)
+			mockUC.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	type testCase struct {
+		name               string
+		paramID            string
+		inputPayload       UpdateRequest
+		mockSetup          func(m *mocks.UserUseCase)
+		expectedStatusCode int
+	}
+
+	tests := []testCase{
+		{
+			name:    "Gagal Validasi JSON (Email tidak valid)",
+			paramID: "user-123",
+			inputPayload: UpdateRequest{
+				Email: "bukan-email",
+			},
+			mockSetup:          func(_ *mocks.UserUseCase) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:    "Gagal Update (User tidak ditemukan)",
+			paramID: "user-not-found",
+			inputPayload: UpdateRequest{
+				Email: "update@test.com",
+				Name:  "Updated Name",
+			},
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("UpdateUser", mock.Anything, "user-not-found", mock.AnythingOfType("domain.UpdateUserRequest")).
+					Return(domain.User{}, errors.New("user not found")).Once()
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:    "Sukses Update User",
+			paramID: "user-valid",
+			inputPayload: UpdateRequest{
+				Email:  "updated@test.com",
+				Name:   "Updated Name",
+				Role:   string(domain.RoleAdmin),
+				Status: string(domain.StatusActive),
+			},
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("UpdateUser", mock.Anything, "user-valid", mock.AnythingOfType("domain.UpdateUserRequest")).
+					Return(domain.User{
+						ID:     bson.NewObjectID(),
+						Email:  "updated@test.com",
+						Name:   "Updated Name",
+						Role:   domain.RoleAdmin,
+						Status: domain.StatusActive,
+					}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockUC := new(mocks.UserUseCase)
+			tc.mockSetup(mockUC)
+
+			r := setupRouter(mockUC)
+
+			payload, _ := json.Marshal(tc.inputPayload)
+			req := httptest.NewRequest(http.MethodPut, "/users/"+tc.paramID, bytes.NewBuffer(payload))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+
+			r.ServeHTTP(rec, req)
+
+			assert.Equal(t, tc.expectedStatusCode, rec.Code)
+			mockUC.AssertExpectations(t)
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	type testCase struct {
+		name               string
+		paramID            string
+		mockSetup          func(m *mocks.UserUseCase)
+		expectedStatusCode int
+	}
+
+	tests := []testCase{
+		{
+			name:    "Gagal Delete (User tidak ditemukan)",
+			paramID: "user-not-found",
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("DeleteUser", mock.Anything, "user-not-found").
+					Return(errors.New("user not found")).Once()
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:    "Sukses Delete User",
+			paramID: "user-valid",
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("DeleteUser", mock.Anything, "user-valid").
+					Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockUC := new(mocks.UserUseCase)
+			tc.mockSetup(mockUC)
+
+			r := setupRouter(mockUC)
+
+			req := httptest.NewRequest(http.MethodDelete, "/users/"+tc.paramID, nil)
+			rec := httptest.NewRecorder()
+
+			r.ServeHTTP(rec, req)
+
+			assert.Equal(t, tc.expectedStatusCode, rec.Code)
+			mockUC.AssertExpectations(t)
+		})
+	}
+}

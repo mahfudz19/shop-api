@@ -48,11 +48,22 @@ type User struct {
 	UpdatedAt time.Time     `bson:"updatedAt" json:"updatedAt"`
 }
 
+// UpdateUserRequest struct untuk request update user
+type UpdateUserRequest struct {
+	Email  string `json:"email" binding:"required,email"`
+	Name   string `json:"name"`
+	Role   string `json:"role"`
+	Status string `json:"status"`
+}
+
 // UserRepository interface untuk database operations
 type UserRepository interface {
 	Create(ctx context.Context, user User) error
 	GetByEmail(ctx context.Context, email string) (User, error)
 	GetByID(ctx context.Context, id string) (User, error)
+	GetAll(ctx context.Context) ([]User, error)
+	Update(ctx context.Context, user User) error
+	Delete(ctx context.Context, id string) error
 	EmailExists(ctx context.Context, email string) (bool, error)
 }
 
@@ -61,4 +72,7 @@ type UserUseCase interface {
 	Register(ctx context.Context, user User) error
 	Login(ctx context.Context, email, password string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
+	GetAllUsers(ctx context.Context) ([]User, error)
+	UpdateUser(ctx context.Context, id string, req UpdateUserRequest) (User, error)
+	DeleteUser(ctx context.Context, id string) error
 }

@@ -124,3 +124,99 @@ func (u *userUseCase) GetUserByID(ctx context.Context, id string) (domain.User, 
 	user.Password = ""
 	return user, nil
 }
+
+// GetAllUsers ambil semua user
+func (u *userUseCase) GetAllUsers(ctx context.Context) ([]domain.User, error) {
+	users, err := u.repo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Jangan return password
+	for i := range users {
+		users[i].Password = ""
+	}
+	return users, nil
+}
+
+// UpdateUser update user by ID
+func (u *userUseCase) UpdateUser(ctx context.Context, id string, req domain.UpdateUserRequest) (domain.User, error) {
+	if id == "" {
+		return domain.User{}, errors.New("user ID is required")
+	}
+
+	// Get existing user
+	user, err := u.repo.GetByID(ctx, id)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return domain.User{}, errors.New("user not found")
+		}
+		return domain.User{}, err
+	}
+
+	// Update email (dengan validasi duplikasi)
+	newEmail := strings.ToLower(strings.TrimSpace(req.Email))
+	if newEmail != user.Email {
+		exists, err := u.repo.EmailExists(ctx, newEmail)
+		if err != nil {
+			return domain.User{}, err
+		}
+		if exists {
+			return domain.User{}, errors.New("email already registered")
+		}
+		user.Email = newEmail
+	}
+
+	// Update name
+	if req.Name != "" {
+		user.Name = req.Name
+	}
+
+	// Update role (jika disediakan)
+	if req.Role != "" {
+		role := domain.UserRole(req.Role)
+		if !role.IsValid() {
+			return domain.User{}, errors.New("invalid role")
+		}
+		user.Role = role
+	}
+
+	// Update status (jika disediakan)
+	if req.Status != "" {
+		status := domain.UserStatus(req.Status)
+		if status != domain.StatusActive && status != domain.StatusInactive {
+			return domain.User{}, errors.New("invalid status")
+		}
+		user.Status = status
+	}
+
+	user.UpdatedAt = time.Now()
+
+	// Update ke database
+	err = u.repo.Update(ctx, user)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	// Jangan return password
+	user.Password = ""
+	return user, nil
+}
+
+// DeleteUser hapus user by ID
+func (u *userUseCase) DeleteUser(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("user ID is required")
+	}
+
+	// Cek user exists
+	_, err := u.repo.GetByID(ctx, id)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("user not found")
+		}
+		return err
+	}
+
+	return u.repo.Delete(ctx, id)
+}

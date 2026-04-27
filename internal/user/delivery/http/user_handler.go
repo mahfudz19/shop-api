@@ -27,8 +27,11 @@ func NewUserHandler(public gin.IRouter, protected gin.IRouter, admin gin.IRouter
 	// Logout dipindahkan ke protectedRoutes agar memerlukan CSRF protection
 	protected.POST("/auth/logout", handler.Logout)
 
-	// User routes
+	// User routes (Admin only - dengan CSRF protection)
+	admin.GET("/users", handler.GetAll)
 	admin.GET("/users/:id", handler.GetByID)
+	admin.PUT("/users/:id", handler.Update)
+	admin.DELETE("/users/:id", handler.Delete)
 
 	// Rute Protected (Wajib Login)
 	protected.GET("/auth/my", handler.GetMyProfile)
@@ -146,4 +149,69 @@ func (h *UserHandler) GetMyProfile(c *gin.Context) {
 	}
 
 	response.SuccessSingle(c, "Berhasil memuat profil", user)
+}
+
+// GetAll handler untuk mendapatkan semua user
+func (h *UserHandler) GetAll(c *gin.Context) {
+	users, err := h.usecase.GetAllUsers(c.Request.Context())
+	if err != nil {
+		response.ErrorInternal(c, err)
+		return
+	}
+
+	response.SuccessList(c, "Users retrieved successfully", users, response.Pagination{
+		Page:       1,
+		Limit:      int64(len(users)),
+		Total:      int64(len(users)),
+		TotalPages: 1,
+		HasNext:    false,
+		HasPrev:    false,
+	})
+}
+
+// UpdateRequest struct untuk request update
+type UpdateRequest struct {
+	Email  string `json:"email" binding:"required,email"`
+	Name   string `json:"name"`
+	Role   string `json:"role"`
+	Status string `json:"status"`
+}
+
+// Update handler untuk update user
+func (h *UserHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+
+	var req UpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ErrorBadRequest(c, err.Error())
+		return
+	}
+
+	updateReq := domain.UpdateUserRequest{
+		Email:  req.Email,
+		Name:   req.Name,
+		Role:   req.Role,
+		Status: req.Status,
+	}
+
+	user, err := h.usecase.UpdateUser(c.Request.Context(), id, updateReq)
+	if err != nil {
+		response.ErrorBadRequest(c, err.Error())
+		return
+	}
+
+	response.SuccessSingle(c, "User updated successfully", user)
+}
+
+// Delete handler untuk hapus user
+func (h *UserHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	err := h.usecase.DeleteUser(c.Request.Context(), id)
+	if err != nil {
+		response.ErrorBadRequest(c, err.Error())
+		return
+	}
+
+	response.SuccessSingle(c, "User deleted successfully", nil)
 }

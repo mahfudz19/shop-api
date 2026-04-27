@@ -88,6 +88,82 @@ func (_m *UserUseCase) Register(ctx context.Context, user domain.User) error {
 	return r0
 }
 
+// GetAllUsers provides a mock function with given fields: ctx
+func (_m *UserUseCase) GetAllUsers(ctx context.Context) ([]domain.User, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllUsers")
+	}
+
+	var r0 []domain.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]domain.User, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []domain.User); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateUser provides a mock function with given fields: ctx, id, req
+func (_m *UserUseCase) UpdateUser(ctx context.Context, id string, req domain.UpdateUserRequest) (domain.User, error) {
+	ret := _m.Called(ctx, id, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUser")
+	}
+
+	var r0 domain.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, domain.UpdateUserRequest) (domain.User, error)); ok {
+		return rf(ctx, id, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, domain.UpdateUserRequest) domain.User); ok {
+		r0 = rf(ctx, id, req)
+	} else {
+		r0 = ret.Get(0).(domain.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, domain.UpdateUserRequest) error); ok {
+		r1 = rf(ctx, id, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteUser provides a mock function with given fields: ctx, id
+func (_m *UserUseCase) DeleteUser(ctx context.Context, id string) error {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteUser")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewUserUseCase creates a new instance of UserUseCase. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewUserUseCase(t interface {

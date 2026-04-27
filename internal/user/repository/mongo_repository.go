@@ -64,3 +64,53 @@ func (m *mongoUserRepository) EmailExists(ctx context.Context, email string) (bo
 	}
 	return count > 0, nil
 }
+
+// GetAll ambil semua user
+func (m *mongoUserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
+	cursor, err := m.db.Collection(m.collection).Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []domain.User
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+// Update update user
+func (m *mongoUserRepository) Update(ctx context.Context, user domain.User) error {
+	objID, err := bson.ObjectIDFromHex(user.ID.Hex())
+	if err != nil {
+		return err
+	}
+
+	_, err = m.db.Collection(m.collection).UpdateOne(
+		ctx,
+		bson.M{"_id": objID},
+		bson.M{
+			"$set": bson.M{
+				"email":     user.Email,
+				"name":      user.Name,
+				"role":      user.Role,
+				"status":    user.Status,
+				"updatedAt": user.UpdatedAt,
+			},
+		},
+	)
+	return err
+}
+
+// Delete hapus user
+func (m *mongoUserRepository) Delete(ctx context.Context, id string) error {
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.db.Collection(m.collection).DeleteOne(ctx, bson.M{"_id": objID})
+	return err
+}
