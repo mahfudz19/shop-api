@@ -32,6 +32,24 @@ func (_m *UserRepository) Create(ctx context.Context, user domain.User) error {
 	return r0
 }
 
+// Delete provides a mock function with given fields: ctx, id
+func (_m *UserRepository) Delete(ctx context.Context, id string) error {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // EmailExists provides a mock function with given fields: ctx, email
 func (_m *UserRepository) EmailExists(ctx context.Context, email string) (bool, error) {
 	ret := _m.Called(ctx, email)
@@ -53,6 +71,34 @@ func (_m *UserRepository) EmailExists(ctx context.Context, email string) (bool, 
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAll provides a mock function with given fields: ctx, filter
+func (_m *UserRepository) GetAll(ctx context.Context, filter domain.UserFilter) (domain.UserWithPagination, error) {
+	ret := _m.Called(ctx, filter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAll")
+	}
+
+	var r0 domain.UserWithPagination
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, domain.UserFilter) (domain.UserWithPagination, error)); ok {
+		return rf(ctx, filter)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, domain.UserFilter) domain.UserWithPagination); ok {
+		r0 = rf(ctx, filter)
+	} else {
+		r0 = ret.Get(0).(domain.UserWithPagination)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, domain.UserFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -116,36 +162,6 @@ func (_m *UserRepository) GetByID(ctx context.Context, id string) (domain.User, 
 	return r0, r1
 }
 
-// GetAll provides a mock function with given fields: ctx
-func (_m *UserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAll")
-	}
-
-	var r0 []domain.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]domain.User, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) []domain.User); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.User)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // Update provides a mock function with given fields: ctx, user
 func (_m *UserRepository) Update(ctx context.Context, user domain.User) error {
 	ret := _m.Called(ctx, user)
@@ -157,24 +173,6 @@ func (_m *UserRepository) Update(ctx context.Context, user domain.User) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, domain.User) error); ok {
 		r0 = rf(ctx, user)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Delete provides a mock function with given fields: ctx, id
-func (_m *UserRepository) Delete(ctx context.Context, id string) error {
-	ret := _m.Called(ctx, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Delete")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Error(0)
 	}

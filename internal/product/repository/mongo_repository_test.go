@@ -111,9 +111,11 @@ func TestMongoProductRepository_Integration(t *testing.T) {
 
 	t.Run("1. FetchWithFilter - Test Regex Name & Pagination", func(t *testing.T) {
 		filter := domain.ProductFilter{
-			Search: "macbook",
-			Page:   1,
-			Limit:  2,
+			BaseQuery: domain.BaseQuery{
+				Search: "macbook",
+				Page:   1,
+				Limit:  2,
+			},
 		}
 
 		products, total, err := repo.FetchWithFilter(ctx, filter)
@@ -125,11 +127,13 @@ func TestMongoProductRepository_Integration(t *testing.T) {
 
 	t.Run("2. FetchWithFilter - Test Multi-Filter Kompleks (Harga & Rating)", func(t *testing.T) {
 		filter := domain.ProductFilter{
-			MinPrice:  20000000,
-			MaxPrice:  30000000,
-			Rating:    4.8,
-			SortBy:    "price_rp",
-			SortOrder: "desc",
+			BaseQuery: domain.BaseQuery{
+				SortBy:    "price_rp",
+				SortOrder: "desc",
+			},
+			MinPrice: 20000000,
+			MaxPrice: 30000000,
+			Rating:   4.8,
 		}
 
 		products, total, err := repo.FetchWithFilter(ctx, filter)

@@ -65,20 +65,73 @@ func (m *mongoUserRepository) EmailExists(ctx context.Context, email string) (bo
 	return count > 0, nil
 }
 
-// GetAll ambil semua user
-func (m *mongoUserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
-	cursor, err := m.db.Collection(m.collection).Find(ctx, bson.M{})
+// GetAll ambil semua user dengan filter dan pagination
+func (m *mongoUserRepository) GetAll(ctx context.Context, filter domain.UserFilter) (domain.UserWithPagination, error) {
+	result := domain.UserWithPagination{
+		Data:  []domain.User{},
+		Page:  filter.Page,
+		Limit: filter.Limit,
+		Role:  filter.Role,
+	}
+
+	// Build filter query
+	query := bson.M{}
+	if filter.Search != "" {
+		query["$or"] = []bson.M{
+			{"name": bson.M{"$regex": filter.Search, "$options": "i"}},
+			{"email": bson.M{"$regex": filter.Search, "$options": "i"}},
+		}
+	}
+
+	if filter.Role != "" {
+		query["role"] = filter.Role
+	}
+
+	// Count total documents
+	total, err := m.db.Collection(m.collection).CountDocuments(ctx, query)
 	if err != nil {
-		return nil, err
+		return result, err
+	}
+	result.Total = total
+
+	// Calculate total pages
+	if filter.Limit > 0 {
+		result.TotalPages = (total + filter.Limit - 1) / filter.Limit
+	}
+
+	// Set default page and limit
+	if filter.Page <= 0 {
+		filter.Page = 1
+	}
+	if filter.Limit <= 0 {
+		filter.Limit = 10
+	}
+
+	// Set options for pagination and sorting
+	opts := options.Find().
+		SetSkip((filter.Page - 1) * filter.Limit).
+		SetLimit(filter.Limit)
+
+	// Apply sorting
+	if filter.SortBy != "" {
+		sortOrder := 1 // ascending
+		if filter.SortOrder == "desc" {
+			sortOrder = -1
+		}
+		opts.SetSort(bson.M{filter.SortBy: sortOrder})
+	}
+
+	cursor, err := m.db.Collection(m.collection).Find(ctx, query, opts)
+	if err != nil {
+		return result, err
 	}
 	defer cursor.Close(ctx)
 
-	var users []domain.User
-	if err := cursor.All(ctx, &users); err != nil {
-		return nil, err
+	if err := cursor.All(ctx, &result.Data); err != nil {
+		return result, err
 	}
 
-	return users, nil
+	return result, nil
 }
 
 // Update update user

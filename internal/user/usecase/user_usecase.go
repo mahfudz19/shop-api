@@ -125,18 +125,18 @@ func (u *userUseCase) GetUserByID(ctx context.Context, id string) (domain.User, 
 	return user, nil
 }
 
-// GetAllUsers ambil semua user
-func (u *userUseCase) GetAllUsers(ctx context.Context) ([]domain.User, error) {
-	users, err := u.repo.GetAll(ctx)
+// GetAllUsers ambil semua user dengan filter dan pagination
+func (u *userUseCase) GetAllUsers(ctx context.Context, filter domain.UserFilter) (domain.UserWithPagination, error) {
+	result, err := u.repo.GetAll(ctx, filter)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 
 	// Jangan return password
-	for i := range users {
-		users[i].Password = ""
+	for i := range result.Data {
+		result.Data[i].Password = ""
 	}
-	return users, nil
+	return result, nil
 }
 
 // UpdateUser update user by ID

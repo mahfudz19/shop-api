@@ -41,16 +41,12 @@ type ProductStats struct {
 
 // ProductFilter Struct untuk filter dan pagination
 type ProductFilter struct {
-	Search      string
+	BaseQuery
 	Location    string
 	Marketplace string
 	MinPrice    int64
 	MaxPrice    int64
-	SortBy      string
-	SortOrder   string
 	Rating      float64
-	Page        int64
-	Limit       int64
 }
 
 // ProductResponse Struct untuk response dengan metadata pagination

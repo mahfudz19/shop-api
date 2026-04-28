@@ -106,4 +106,57 @@ func TestMongoUserRepository_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, exists)
 	})
+
+	t.Run("7. GetAll - Sukses dengan Pagination", func(t *testing.T) {
+		// Tambahkan beberapa user lagi untuk test pagination
+		for i := 0; i < 5; i++ {
+			extraUser := domain.User{
+				ID:        bson.NewObjectID(),
+				Email:     "user%d@example.com",
+				Password:  "password123",
+				Name:      "User %d",
+				Role:      domain.RoleUser,
+				Status:    domain.StatusActive,
+				CreatedAt: time.Now().UTC(),
+				UpdatedAt: time.Now().UTC(),
+			}
+			_ = repo.Create(ctx, extraUser)
+		}
+
+		// Test GetAll dengan pagination
+		filter := domain.UserFilter{
+			BaseQuery: domain.BaseQuery{
+				Page:  1,
+				Limit: 3,
+			},
+		}
+
+		result, err := repo.GetAll(ctx, filter)
+
+		require.NoError(t, err)
+		assert.NotEmpty(t, result.Data)
+		assert.Equal(t, int64(1), result.Page)
+		assert.Equal(t, int64(3), result.Limit)
+		assert.GreaterOrEqual(t, result.Total, int64(6)) // user awal + 5 user baru
+	})
+
+	t.Run("8. GetAll - Sukses dengan Search Filter", func(t *testing.T) {
+		filter := domain.UserFilter{
+			BaseQuery: domain.BaseQuery{
+				Search: "Mahfudz",
+				Page:   1,
+				Limit:  10,
+			},
+		}
+
+		result, err := repo.GetAll(ctx, filter)
+
+		require.NoError(t, err)
+		assert.NotEmpty(t, result.Data)
+		assert.GreaterOrEqual(t, result.Total, int64(1))
+		// Pastikan hasil search mengandung "Mahfudz" (case-insensitive)
+		for _, user := range result.Data {
+			assert.Contains(t, user.Name, "Mahfudz")
+		}
+	})
 }

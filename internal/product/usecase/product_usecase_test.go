@@ -25,8 +25,7 @@ func TestGetProductsWithFilter(t *testing.T) {
 		{
 			name: "Gagal karena Database Error",
 			inputFilter: domain.ProductFilter{
-				Page:  1,
-				Limit: 10,
+				BaseQuery: domain.BaseQuery{Page: 1, Limit: 10},
 			},
 			mockSetup: func(m *mocks.ProductRepository) {
 				m.On("FetchWithFilter", mock.Anything, mock.AnythingOfType("domain.ProductFilter")).
@@ -38,8 +37,10 @@ func TestGetProductsWithFilter(t *testing.T) {
 		{
 			name: "Sukses & Sanitasi - Page 0/Limit 0 diubah jadi Page 1/Limit 10",
 			inputFilter: domain.ProductFilter{
-				Page:  -5, // User iseng mengirim page negatif
-				Limit: 0,  // Limit kosong
+				BaseQuery: domain.BaseQuery{
+					Page:  -5, // User iseng mengirim page negatif
+					Limit: 0,  // Limit kosong
+				},
 			},
 			mockSetup: func(m *mocks.ProductRepository) {
 				m.On("FetchWithFilter", mock.Anything, mock.MatchedBy(func(f domain.ProductFilter) bool {
@@ -58,8 +59,10 @@ func TestGetProductsWithFilter(t *testing.T) {
 		{
 			name: "Sukses & Sanitasi - Limit Ekstrem di-cap ke 100",
 			inputFilter: domain.ProductFilter{
-				Page:  2,
-				Limit: 5000, // User mencoba mengambil 5000 data
+				BaseQuery: domain.BaseQuery{
+					Page:  2,
+					Limit: 5000, // User mencoba mengambil 5000 data
+				},
 			},
 			mockSetup: func(m *mocks.ProductRepository) {
 				m.On("FetchWithFilter", mock.Anything, mock.MatchedBy(func(f domain.ProductFilter) bool {

@@ -36,8 +36,9 @@ Pattern: Clean Architecture
 # TESTING RULES (WAJIB)
 
 1. Delivery & Usecase: Gunakan Table-Driven Tests dengan Testify Mock.
-2. Repository: JANGAN gunakan Mock. Selalu buat Integration Test dengan memanggil testutil.SetupTestDB() di fungsi TestMain.
-3. Gunakan assert dan require dari Testify.
+2. Gunakan perintah "Make mock" agar mendapatkan hasil mock yang akurat.
+3. Repository: JANGAN gunakan Mock. Selalu buat Integration Test dengan memanggil testutil.SetupTestDB() di fungsi TestMain.
+4. Gunakan assert dan require dari Testify.
 
 # WORKFLOW
 

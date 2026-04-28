@@ -326,10 +326,16 @@ func TestGetAll(t *testing.T) {
 		{
 			name: "Sukses GetAll Users",
 			mockSetup: func(m *mocks.UserUseCase) {
-				m.On("GetAllUsers", mock.Anything).
-					Return([]domain.User{
-						{ID: bson.NewObjectID(), Email: "user1@test.com", Name: "User 1", Role: domain.RoleUser},
-						{ID: bson.NewObjectID(), Email: "user2@test.com", Name: "User 2", Role: domain.RoleAdmin},
+				m.On("GetAllUsers", mock.Anything, mock.Anything).
+					Return(domain.UserWithPagination{
+						Data: []domain.User{
+							{ID: bson.NewObjectID(), Email: "user1@test.com", Name: "User 1", Role: domain.RoleUser},
+							{ID: bson.NewObjectID(), Email: "user2@test.com", Name: "User 2", Role: domain.RoleAdmin},
+						},
+						Page:       1,
+						Limit:      10,
+						Total:      2,
+						TotalPages: 1,
 					}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
@@ -337,10 +343,26 @@ func TestGetAll(t *testing.T) {
 		{
 			name: "Gagal GetAll Users (Error Internal)",
 			mockSetup: func(m *mocks.UserUseCase) {
-				m.On("GetAllUsers", mock.Anything).
-					Return([]domain.User{}, errors.New("database error")).Once()
+				m.On("GetAllUsers", mock.Anything, mock.Anything).
+					Return(domain.UserWithPagination{}, errors.New("database error")).Once()
 			},
 			expectedStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name: "Sukses GetAll Users dengan Pagination",
+			mockSetup: func(m *mocks.UserUseCase) {
+				m.On("GetAllUsers", mock.Anything, mock.MatchedBy(func(f domain.UserFilter) bool {
+					return f.Page == 2 && f.Limit == 5
+				})).
+					Return(domain.UserWithPagination{
+						Data:       []domain.User{},
+						Page:       2,
+						Limit:      5,
+						Total:      0,
+						TotalPages: 0,
+					}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
 		},
 	}
 
@@ -351,7 +373,12 @@ func TestGetAll(t *testing.T) {
 
 			r := setupRouter(mockUC)
 
-			req := httptest.NewRequest(http.MethodGet, "/users", nil)
+			var req *http.Request
+			if tc.name == "Sukses GetAll Users dengan Pagination" {
+				req = httptest.NewRequest(http.MethodGet, "/users?page=2&limit=5", nil)
+			} else {
+				req = httptest.NewRequest(http.MethodGet, "/users", nil)
+			}
 			rec := httptest.NewRecorder()
 
 			r.ServeHTTP(rec, req)

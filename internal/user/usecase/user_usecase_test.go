@@ -284,3 +284,90 @@ func TestLogin(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAllUsers(t *testing.T) {
+	type testCase struct {
+		name          string
+		filter        domain.UserFilter
+		mockSetup     func(m *mocks.UserRepository)
+		expectedError error
+	}
+
+	tests := []testCase{
+		{
+			name:   "Sukses GetAll Users",
+			filter: domain.UserFilter{BaseQuery: domain.BaseQuery{Page: 1, Limit: 10}},
+			mockSetup: func(m *mocks.UserRepository) {
+				m.On("GetAll", mock.Anything, mock.Anything).
+					Return(domain.UserWithPagination{
+						Data: []domain.User{
+							{ID: bson.NewObjectID(), Email: "user1@test.com", Name: "User 1", Role: domain.RoleUser},
+							{ID: bson.NewObjectID(), Email: "user2@test.com", Name: "User 2", Role: domain.RoleAdmin},
+						},
+						Page:       1,
+						Limit:      10,
+						Total:      2,
+						TotalPages: 1,
+					}, nil).Once()
+			},
+			expectedError: nil,
+		},
+		{
+			name:   "Gagal GetAll Users (Database Error)",
+			filter: domain.UserFilter{BaseQuery: domain.BaseQuery{Page: 1, Limit: 10}},
+			mockSetup: func(m *mocks.UserRepository) {
+				m.On("GetAll", mock.Anything, mock.Anything).
+					Return(domain.UserWithPagination{}, errors.New("database error")).Once()
+			},
+			expectedError: errors.New("database error"),
+		},
+		{
+			name: "Sukses GetAll dengan Search Filter",
+			filter: domain.UserFilter{
+				BaseQuery: domain.BaseQuery{
+					Search: "john",
+					Page:   1,
+					Limit:  5,
+				},
+			},
+			mockSetup: func(m *mocks.UserRepository) {
+				m.On("GetAll", mock.Anything, mock.MatchedBy(func(f domain.UserFilter) bool {
+					return f.Search == "john" && f.Page == 1 && f.Limit == 5
+				})).
+					Return(domain.UserWithPagination{
+						Data:       []domain.User{{ID: bson.NewObjectID(), Email: "john@test.com", Name: "John Doe"}},
+						Page:       1,
+						Limit:      5,
+						Total:      1,
+						TotalPages: 1,
+					}, nil).Once()
+			},
+			expectedError: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepo := new(mocks.UserRepository)
+			tc.mockSetup(mockRepo)
+
+			userUC := usecase.NewUserUseCase(mockRepo)
+			result, err := userUC.GetAllUsers(context.Background(), tc.filter)
+
+			if tc.expectedError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedError.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, result.Data)
+			}
+
+			// Pastikan password dikosongkan
+			for _, user := range result.Data {
+				assert.Empty(t, user.Password)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}

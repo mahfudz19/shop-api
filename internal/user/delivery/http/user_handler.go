@@ -4,6 +4,7 @@ package http
 import (
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/username/shop-api/internal/domain"
@@ -24,17 +25,16 @@ func NewUserHandler(public gin.IRouter, protected gin.IRouter, admin gin.IRouter
 	// Auth routes
 	public.POST("/auth/register", handler.Register)
 	public.POST("/auth/login", handler.Login)
+
 	// Logout dipindahkan ke protectedRoutes agar memerlukan CSRF protection
 	protected.POST("/auth/logout", handler.Logout)
+	protected.GET("/auth/my", handler.GetMyProfile)
 
 	// User routes (Admin only - dengan CSRF protection)
 	admin.GET("/users", handler.GetAll)
 	admin.GET("/users/:id", handler.GetByID)
 	admin.PUT("/users/:id", handler.Update)
 	admin.DELETE("/users/:id", handler.Delete)
-
-	// Rute Protected (Wajib Login)
-	protected.GET("/auth/my", handler.GetMyProfile)
 }
 
 // RegisterRequest struct untuk request body
@@ -151,22 +151,56 @@ func (h *UserHandler) GetMyProfile(c *gin.Context) {
 	response.SuccessSingle(c, "Berhasil memuat profil", user)
 }
 
-// GetAll handler untuk mendapatkan semua user
+// GetAll handler untuk mendapatkan semua user dengan pagination dan filter
 func (h *UserHandler) GetAll(c *gin.Context) {
-	users, err := h.usecase.GetAllUsers(c.Request.Context())
+	// Parse filter dari query params
+	filter := domain.UserFilter{
+		BaseQuery: domain.BaseQuery{
+			Search:    c.Query("search"),
+			SortBy:    c.Query("sort_by"),
+			SortOrder: c.Query("sort_order"),
+		},
+	}
+
+	if role := c.Query("role"); role != "" {
+		userRole := domain.UserRole(role)
+		if !userRole.IsValid() {
+			response.ErrorBadRequest(c, "invalid role")
+			return
+		}
+		filter.Role = userRole
+	}
+
+	if page := c.Query("page"); page != "" {
+		if val, err := strconv.ParseInt(page, 10, 64); err == nil {
+			filter.Page = val
+		}
+	}
+	if limit := c.Query("limit"); limit != "" {
+		if val, err := strconv.ParseInt(limit, 10, 64); err == nil {
+			filter.Limit = val
+		}
+	}
+
+	// Panggil usecase
+	resp, err := h.usecase.GetAllUsers(c.Request.Context(), filter)
 	if err != nil {
 		response.ErrorInternal(c, err)
 		return
 	}
 
-	response.SuccessList(c, "Users retrieved successfully", users, response.Pagination{
-		Page:       1,
-		Limit:      int64(len(users)),
-		Total:      int64(len(users)),
-		TotalPages: 1,
-		HasNext:    false,
-		HasPrev:    false,
-	})
+	// Build pagination metadata
+	pagination := response.Pagination{
+		Page:       resp.Page,
+		Limit:      resp.Limit,
+		Total:      resp.Total,
+		TotalPages: resp.TotalPages,
+		HasNext:    resp.Page < resp.TotalPages,
+		HasPrev:    resp.Page > 1,
+	}
+
+	// Response standar
+	response.SuccessList(c, "Users retrieved successfully", resp.Data, pagination)
 }
 
 // UpdateRequest struct untuk request update

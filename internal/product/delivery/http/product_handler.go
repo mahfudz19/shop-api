@@ -33,11 +33,13 @@ func (h *ProductHandler) FetchAll(c *gin.Context) {
 
 	// Parse filter (sama seperti sebelumnya)
 	filter := domain.ProductFilter{
-		Search:      c.Query("search"),
+		BaseQuery: domain.BaseQuery{
+			Search:    c.Query("search"),
+			SortBy:    c.Query("sort_by"),
+			SortOrder: c.Query("sort_order"),
+		},
 		Location:    c.Query("location"),
 		Marketplace: c.Query("marketplace"),
-		SortBy:      c.Query("sort_by"),
-		SortOrder:   c.Query("sort_order"),
 	}
 
 	if minPrice := c.Query("min_price"); minPrice != "" {
