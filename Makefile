@@ -1,3 +1,6 @@
+include .env
+export
+
 # Variables
 APP_NAME = shop-api
 MAIN_PATH = ./cmd/api
@@ -130,3 +133,58 @@ install-tools:
 	@echo "   Mac:    brew install golangci-lint"
 	@echo "   Linux:  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin"
 	@echo "   Windows: choco install golangci-lint"
+
+## es-test: Test Elasticsearch connection (Serverless compatible)
+es-test:
+	@echo "$(YELLOW)🔍 Testing Elasticsearch connection...$(NC)"
+	@curl -s -H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+		"$(ELASTICSEARCH_URL)/" | jq '.cluster_name, .version.number'
+	@echo "$(GREEN)✅ Elasticsearch connection test complete$(NC)"
+
+## es-info: Show Elasticsearch info
+es-info:
+	@echo "$(BLUE)📊 Elasticsearch Serverless Info:$(NC)"
+	@curl -s -H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+		"$(ELASTICSEARCH_URL)/" | jq .
+
+## es-indices: List all indices (via Kibana - Serverless limitation)
+es-indices:
+	@echo "$(BLUE)📋 Elasticsearch Indices:$(NC)"
+	@echo "$(YELLOW)Note: Serverless tidak mendukung API _indices$(NC)"
+	@echo "Buka Kibana untuk melihat indices: $(ELASTICSEARCH_URL)/app/kibana"
+	@echo ""
+	@echo "$(GREEN)Alternative: Test dengan search query$(NC)"
+	@curl -s -H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+		"$(ELASTICSEARCH_URL)/products/_search" \
+		-H 'Content-Type: application/json' \
+		-d '{"query":{"match_all":{}},"size":0}' | jq '.hits.total'
+
+## es-create-products-index: Create products index with mapping
+es-create-products-index:
+	@echo "$(YELLOW)📦 Creating products index...$(NC)"
+	@if [ ! -f elasticsearch-implementation/mappings.json ]; then \
+		echo "$(RED)Error: mappings.json not found!$(NC)"; \
+		echo "Create file: elasticsearch-implementation/mappings.json"; \
+		exit 1; \
+	fi
+	@curl -s -X PUT \
+		-H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+		"$(ELASTICSEARCH_URL)/products" \
+		-H 'Content-Type: application/json' \
+		-d @elasticsearch-implementation/mappings.json | jq .
+	@echo "$(GREEN)✅ Products index created$(NC)"
+
+## es-search-test: Test search on products index
+es-search-test:
+	@echo "$(YELLOW)🔍 Testing search on products index...$(NC)"
+	@curl -s -X GET \
+		-H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+		"$(ELASTICSEARCH_URL)/products/_search" \
+		-H 'Content-Type: application/json' \
+		-d '{"query":{"match_all":{}}}' | jq '.hits.total'
+
+## es-kibana: Show Kibana access info
+es-kibana:
+	@echo "$(BLUE)🌐 Kibana Access Info:$(NC)"
+	@echo "URL: $(ELASTICSEARCH_URL)/app/kibana"
+	@echo "Use API Key for authentication"

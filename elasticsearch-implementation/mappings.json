@@ -1,0 +1,33 @@
+{
+  "mappings": {
+    "properties": {
+      "id": { "type": "keyword" },
+      "master_product_id": { "type": "keyword" },
+      "name": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "url": { "type": "keyword" },
+      "clean_url": { "type": "keyword" },
+      "category": { "type": "keyword" },
+      "search_keyword": { "type": "text", "analyzer": "standard" },
+      "price_rp": { "type": "long" },
+      "price_original": { "type": "long" },
+      "discount_percent": { "type": "integer" },
+      "rating": { "type": "float" },
+      "sold_count": { "type": "integer" },
+      "location": { "type": "keyword" },
+      "marketplace": { "type": "keyword" },
+      "shop": { "type": "keyword" },
+      "image_url": { "type": "keyword" },
+      "is_anomaly": { "type": "boolean" },
+      "match_confidence": { "type": "float" },
+      "marketplace_product_id": { "type": "keyword" },
+      "created_at": { "type": "date" },
+      "updated_at": { "type": "date" }
+    }
+  }
+}
