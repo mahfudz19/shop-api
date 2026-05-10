@@ -7,16 +7,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/username/shop-api/internal/domain"
 	"github.com/username/shop-api/internal/response"
+	"github.com/username/shop-api/internal/service"
 )
 
 // ProductHandler struct untuk handle HTTP request terkait Product
 type ProductHandler struct {
 	usecase domain.ProductUseCase
+	syncSvc *service.ElasticsearchSyncService
 }
 
 // NewProductHandler = Inisialisasi routes untuk Product
-func NewProductHandler(public gin.IRouter, admin gin.IRouter, us domain.ProductUseCase) {
-	handler := &ProductHandler{usecase: us}
+func NewProductHandler(
+	public gin.IRouter,
+	admin gin.IRouter,
+	us domain.ProductUseCase,
+	syncSvc *service.ElasticsearchSyncService,
+) {
+	handler := &ProductHandler{
+		usecase: us,
+		syncSvc: syncSvc,
+	}
 
 	public.GET("/products/deals", handler.GetDeals)
 	public.GET("/products/stats", handler.GetStats)
@@ -25,6 +35,7 @@ func NewProductHandler(public gin.IRouter, admin gin.IRouter, us domain.ProductU
 
 	// Rute Admin (Wajib Login + Role Admin)
 	admin.GET("/products-admin/stats", handler.GetStatsAdmin)
+	admin.POST("/admin/sync-elasticsearch", handler.SyncElasticsearch)
 }
 
 // FetchAll = List dengan pagination
@@ -144,5 +155,24 @@ func (h *ProductHandler) GetStatsAdmin(c *gin.Context) {
 		"total_products": 1520,
 		"total_shops":    45,
 		"active_deals":   12,
+	})
+}
+
+// SyncElasticsearch = Handler untuk trigger sync MongoDB → Elasticsearch
+// Only accessible by admin role
+func (h *ProductHandler) SyncElasticsearch(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	// Run sync
+	synced, err := h.syncSvc.SyncAll(ctx)
+	if err != nil {
+		response.ErrorInternal(c, err)
+		return
+	}
+
+	response.SuccessSingle(c, "Elasticsearch sync completed", gin.H{
+		"synced":  synced,
+		"status":  "success",
+		"message": "Products successfully synced to Elasticsearch",
 	})
 }

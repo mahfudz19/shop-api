@@ -13,6 +13,7 @@ RED = \033[0;31m
 BLUE = \033[0;34m
 NC = \033[0m # No Color
 
+
 .PHONY: all help dev run build test clean tidy fmt lint docker-build docker-run
 
 ## help: Show this help message
@@ -140,6 +141,50 @@ es-test:
 	@curl -s -H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
 		"$(ELASTICSEARCH_URL)/" | jq '.cluster_name, .version.number'
 	@echo "$(GREEN)✅ Elasticsearch connection test complete$(NC)"
+
+## es-sync: Sync MongoDB to Elasticsearch (one-time sync)
+es-sync:
+	@echo "$(YELLOW)🔄 Syncing MongoDB to Elasticsearch...$(NC)"
+	@echo "$(BLUE)⏳ This may take a while depending on the number of products...$(NC)"
+	@go run cmd/sync/es-sync/main.go
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "$(GREEN)✅ SYNC COMPLETED SUCCESSFULLY!$(NC)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "$(BLUE)💡 Next steps:$(NC)"
+	@echo "   1. Test the API: curl http://localhost:8080/products"
+	@echo "   2. Check Elasticsearch: make es-indices"
+	@echo ""
+
+## es-sync-verbose: Sync MongoDB to Elasticsearch with detailed logging
+es-sync-verbose:
+	@echo "$(YELLOW)🔄 Syncing MongoDB to Elasticsearch (verbose mode)...$(NC)"
+	@ES_SYNC_VERBOSE=true go run cmd/sync/es-sync/main.go
+	@echo "$(GREEN)✅ Sync completed!$(NC)"
+
+## es-delete: Delete all documents from products index (soft delete)
+es-delete:
+	@echo "$(YELLOW)🗑️  Deleting all documents from products index...$(NC)"
+	@curl -s -X POST \
+		-H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+		"$(ELASTICSEARCH_URL)/products/_delete_by_query" \
+		-H 'Content-Type: application/json' \
+		-d '{"query":{"match_all":{}}}' | jq '.deleted'
+	@echo "$(GREEN)✅ All documents deleted from products index$(NC)"
+
+## es-drop-index: Drop products index completely (hard delete)
+es-drop-index:
+	@echo "$(RED)⚠️  WARNING: This will delete the products index completely!$(NC)"
+	@echo "$(YELLOW)Are you sure? This action cannot be undone.$(NC)"
+	@read -p "Type 'yes' to confirm: " confirm && \
+	if [ "$$confirm" = "yes" ]; then \
+		curl -s -X DELETE \
+			-H "Authorization: ApiKey $(ELASTICSEARCH_API_KEY)" \
+			"$(ELASTICSEARCH_URL)/products" | jq .; \
+		echo "$(GREEN)✅ Products index dropped$(NC)"; \
+	else \
+		echo "$(YELLOW)❌ Operation cancelled$(NC)"; \
+	fi
 
 ## es-info: Show Elasticsearch info
 es-info:

@@ -7,13 +7,15 @@ import (
 	"log"
 	"os"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	"github.com/username/shop-api/internal/config"
+	"github.com/username/shop-api/internal/service"
 
 	productHttp "github.com/username/shop-api/internal/product/delivery/http"
-	productRepo "github.com/username/shop-api/internal/product/repository"
+	"github.com/username/shop-api/internal/product/repository"
 	productUsecase "github.com/username/shop-api/internal/product/usecase"
 
 	masterProductHttp "github.com/username/shop-api/internal/master_product/delivery/http"
@@ -69,8 +71,54 @@ func main() {
 	db := client.Database(dbName)
 
 	log.Printf("📦 Database: %s", dbName)
+	// Initialize Elasticsearch
+	var esClient *elasticsearch.Client
+	var err error
 
-	// 3. Init Gin
+	if os.Getenv("ELASTICSEARCH_ENABLED") == "true" {
+		esCfg := config.LoadElasticsearchConfig()
+		esClient, err = config.NewElasticsearchClient(esCfg)
+		if err != nil {
+			log.Printf("⚠️ Warning: Elasticsearch not available, using MongoDB only: %v", err)
+		}
+	}
+
+	// 3. Init Repositories
+	// MongoDB Product Repository (source of truth)
+	mongoProductRepo := repository.NewMongoProductRepository(db)
+
+	// Elasticsearch Product Repository (for search)
+	var esProductRepo *repository.ElasticsearchProductRepository
+	if esClient != nil {
+		esProductRepo = repository.NewElasticsearchProductRepository(esClient)
+		log.Println("✅ Elasticsearch repository initialized")
+	}
+
+	// Create Sync Service (if ES is available)
+	var syncSvc *service.ElasticsearchSyncService
+	if esProductRepo != nil {
+		syncSvc = service.NewElasticsearchSyncService(mongoProductRepo, esProductRepo)
+		log.Println("✅ Elasticsearch Sync Service initialized")
+	}
+
+	// Product Repository - use ES if available, fallback to MongoDB
+	var productRepository domain.ProductRepository
+	if esProductRepo != nil {
+		productRepository = esProductRepo
+		log.Println("✅ Using Elasticsearch repository for queries")
+	} else {
+		productRepository = mongoProductRepo
+		log.Println("✅ Using MongoDB repository for queries")
+	}
+
+	// Other Repositories
+	userRepository := userRepo.NewMongoUserRepository(db)
+	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
+	catRepo := categoryRepo.NewMongoCategoryRepository(db)
+	promoRepo := promotionRepo.NewMongoPromotionRepository(db)
+	articleRepository := articleRepo.NewMongoArticleRepository(db)
+
+	// 4. Init Gin
 	r := gin.Default()
 	r.Use(middleware.SecurityHeaders())
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
@@ -128,36 +176,30 @@ func main() {
 	adminRoutes.Use(middleware.CSRFProtection())
 
 	// ==========================================
-	// 6. WIRING HANDLERS & USECASES
+	// 6. WIRING USECASES & HANDLERS
 	// ==========================================
 
 	// User
-	userRepository := userRepo.NewMongoUserRepository(db)
 	userUseCase := userUsecase.NewUserUseCase(userRepository)
 	userHttp.NewUserHandler(publicRoutes, protectedRoutes, adminRoutes, userUseCase)
 
 	// Product
-	productRepository := productRepo.NewMongoProductRepository(db)
-	productUsecase := productUsecase.NewProductUseCase(productRepository)
-	productHttp.NewProductHandler(publicRoutes, adminRoutes, productUsecase)
+	productUseCase := productUsecase.NewProductUseCase(productRepository)
+	productHttp.NewProductHandler(publicRoutes, adminRoutes, productUseCase, syncSvc)
 
 	// Master Product
-	masterProductRepository := masterProductRepo.NewMongoMasterProductRepository(db)
 	masterProductUseCase := masterProductUseCase.NewMasterProductUseCase(masterProductRepository)
 	masterProductHttp.NewMasterProductHandler(publicRoutes, protectedRoutes, masterProductUseCase)
 
 	// Category
-	catRepo := categoryRepo.NewMongoCategoryRepository(db)
-	catUC := categoryUseCase.NewCategoryUseCase(catRepo)
-	categoryHttp.NewCategoryHandler(publicRoutes, protectedRoutes, catUC)
+	catUseCase := categoryUseCase.NewCategoryUseCase(catRepo)
+	categoryHttp.NewCategoryHandler(publicRoutes, protectedRoutes, catUseCase)
 
 	// Promotion
-	promoRepo := promotionRepo.NewMongoPromotionRepository(db)
-	promoUC := promotionUseCase.NewPromotionUseCase(promoRepo)
-	promotionHttp.NewPromotionHandler(publicRoutes, protectedRoutes, promoUC)
+	promoUseCase := promotionUseCase.NewPromotionUseCase(promoRepo)
+	promotionHttp.NewPromotionHandler(publicRoutes, protectedRoutes, promoUseCase)
 
 	// Article
-	articleRepository := articleRepo.NewMongoArticleRepository(db)
 	articleUseCase := articleUseCase.NewArticleUseCase(articleRepository)
 	articleHttp.NewArticleHandler(publicRoutes, protectedRoutes, articleUseCase)
 
