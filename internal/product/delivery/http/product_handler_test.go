@@ -21,7 +21,8 @@ func setupRouter(mockUC *mocks.ProductUseCase) *gin.Engine {
 	public := r.Group("/")
 	admin := r.Group("/") // Untuk testing fungsi admin yang masih statis
 
-	NewProductHandler(public, admin, mockUC)
+	// Pass nil for syncSvc in tests that don't test sync functionality
+	NewProductHandler(public, admin, mockUC, nil)
 	return r
 }
 

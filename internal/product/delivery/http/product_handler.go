@@ -1,7 +1,8 @@
-// Package http berisi handler HTTP untuk entitas Product
+// Package http = Delivery layer untuk Product
 package http
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -162,6 +163,12 @@ func (h *ProductHandler) GetStatsAdmin(c *gin.Context) {
 // Only accessible by admin role
 func (h *ProductHandler) SyncElasticsearch(c *gin.Context) {
 	ctx := c.Request.Context()
+
+	// Check if sync service is available
+	if h.syncSvc == nil {
+		response.ErrorInternal(c, errors.New("elasticsearch sync service is not configured"))
+		return
+	}
 
 	// Run sync
 	synced, err := h.syncSvc.SyncAll(ctx)
